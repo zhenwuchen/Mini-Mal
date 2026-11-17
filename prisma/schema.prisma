@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ========================
+// 用户表
+// ========================
+model User {
+  id           String  @id @default(cuid())
+  name         String?
+  email        String  @unique
+  passwordHash String
+  role         String  @default("USER")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart      Cart?
+  orders    Order[]
+  addresses Address[]
+}
+
+// ========================
+// 商品分类表
+// ========================
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+}
+
+// ========================
+// 商品表
+// ========================
+model Product {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  price       Int
+  stock       Int     @default(0)
+  imageUrl    String?
+  isActive    Boolean @default(true)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+// ========================
+// 购物车表
+// ========================
+model Cart {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  items CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ========================
+// 购物车商品明细表
+// ========================
+model CartItem {
+  id        String @id @default(cuid())
+  cartId    String
+  productId String
+  quantity  Int    @default(1)
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@index([productId])
+}
+
+// ========================
+// 用户收货地址表
+// ========================
+model Address {
+  id            String  @id @default(cuid())
+  userId        String
+  recipientName String
+  phone         String
+  province      String
+  city          String
+  district      String
+  addressLine   String
+  postalCode    String?
+  isDefault     Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ========================
+// 订单表
+// ========================
+model Order {
+  id          String @id @default(cuid())
+  orderNumber String @unique
+  userId      String
+
+  checkoutKey    String?
+  itemsAmount    Int     @default(0)
+  shippingAmount Int     @default(0)
+  discountAmount Int     @default(0)
+  totalAmount    Int
+  currency       String  @default("CNY")
+
+  status String @default("PENDING_PAYMENT")
+
+  expiresAt   DateTime?
+  paidAt      DateTime?
+  cancelledAt DateTime?
+  completedAt DateTime?
+
+  shippingAddressId String?
+
+  // 兼容旧字段；后续订单服务仍需写入这些必填字段。
+  shippingName    String
+  shippingPhone   String
+  shippingAddress String
+
+  // 结构化地址快照，不依赖 Address 当前内容。
+  shippingRecipientName String?
+  shippingProvince      String?
+  shippingCity          String?
+  shippingDistrict      String?
+  shippingAddressLine   String?
+  shippingPostalCode    String?
+
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  shippingAddressRecord Address?    @relation(fields: [shippingAddressId], references: [id], onDelete: SetNull)
+  items                 OrderItem[]
+  payments              Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, checkoutKey])
+  @@index([userId])
+  @@index([shippingAddressId])
+  @@index([status])
+}
+
+// ========================
+// 订单商品快照表
+// ========================
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String?
+
+  productName     String
+  productSlug     String?
+  productImageUrl String?
+  unitPrice       Int
+  quantity        Int
+  subtotal        Int
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+// ========================
+// 支付记录表
+// ========================
+model Payment {
+  id      String @id @default(cuid())
+  orderId String
+
+  amount            Int
+  currency          String  @default("CNY")
+  status            String  @default("PENDING")
+  method            String  @default("MOCK")
+  provider          String?
+  providerPaymentId String?
+  idempotencyKey    String?
+  failureCode       String?
+  failureReason     String?
+
+  paidAt DateTime?
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, providerPaymentId])
+  @@unique([provider, idempotencyKey])
+  @@index([orderId])
+  @@index([status])
+}
+
+// ========================
+// 项目元数据表（保留原有模型）
+// ========================
+model AppMeta {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

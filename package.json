@@ -1,0 +1,53 @@
+{
+  "name": "mini-mall",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "npm run db:generate && next build",
+    "start": "next start",
+    "start:production": "node scripts/start-production.mjs",
+    "lint": "eslint",
+    "test": "npm run test:deploy-scripts && npm run test:unit && npm run test:internal-task-auth && npm run test:internal-order-expiration-handler && npm run test:order-expiration",
+    "test:deploy-scripts": "node --test tests/deploy-scripts.test.mjs",
+    "test:unit": "tsx --test tests/catalog.test.ts tests/product-catalog.test.ts tests/product-purchase.test.ts tests/product-proxy.test.ts tests/auth-validation.test.ts tests/auth-service.test.ts tests/cart.test.ts tests/cart-action.test.ts tests/cart-line.test.ts tests/header-cart.test.ts tests/order-schema.test.ts tests/address.test.ts tests/order-create.test.ts tests/order-query.test.ts tests/order-cancel.test.ts tests/payment.test.ts",
+    "test:internal-task-auth": "tsx --conditions=react-server --test tests/internal-task-auth.test.ts",
+    "test:internal-order-expiration-handler": "tsx --conditions=react-server --test tests/internal-order-expiration-handler.test.ts",
+    "test:order-expiration": "tsx --conditions=react-server --test tests/order-expiration.test.ts",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy --schema prisma/schema.prisma",
+    "db:backup": "node scripts/sqlite-backup.mjs",
+    "config:check:production": "node scripts/validate-production-config.mjs",
+    "db:seed": "prisma db seed"
+  },
+  "engines": {
+    "node": ">=22.19.0 <23"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^3.0.3",
+    "next": "16.4.6",
+    "next-auth": "^5.0.0-beta.32",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "4.3.3",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.6",
+    "prisma": "^5.22.0",
+    "tailwindcss": "4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "^5"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}

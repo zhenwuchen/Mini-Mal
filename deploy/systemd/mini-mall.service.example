@@ -1,0 +1,27 @@
+[Unit]
+Description=Mini Mall Next.js application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mini-mall
+Group=mini-mall
+WorkingDirectory=/opt/mini-mall/current
+EnvironmentFile=/etc/mini-mall/production.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node /opt/mini-mall/current/node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+UMask=0077
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/mini-mall /opt/mini-mall/current/.next/cache
+
+[Install]
+WantedBy=multi-user.target

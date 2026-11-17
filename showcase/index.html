@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Mini Mal1 求职展示页：基于 Next.js、Prisma 与 SQLite 的全栈微型电商项目，重点展示模拟支付、事务一致性、订单取消与超时处理。"
+    />
+    <meta name="theme-color" content="#f1f4ef" />
+    <meta name="color-scheme" content="light" />
+    <meta property="og:title" content="Mini Mal1 · 全栈微型电商项目" />
+    <meta
+      property="og:description"
+      content="从商品浏览到订单回收，查看真实业务功能、技术架构与工程实现。"
+    />
+    <title>Mini Mal1 · 全栈微型电商项目</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="site-header" data-site-header>
+      <a class="brand" href="#home" aria-label="Mini Mal1 首页">
+        <span class="brand-mark" aria-hidden="true">M</span>
+        <span>Mini Mal1</span>
+      </a>
+
+      <button
+        class="menu-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="site-navigation"
+        data-menu-toggle
+      >
+        <span class="menu-toggle-label">菜单</span>
+        <span class="menu-toggle-icon" aria-hidden="true"></span>
+      </button>
+
+      <nav id="site-navigation" class="site-nav" aria-label="页面导航" data-site-nav>
+        <a href="#features">功能</a>
+        <a href="#highlights">技术实现</a>
+        <a href="#architecture">架构</a>
+        <a href="#demo">演示</a>
+        <a href="#local-run">本地运行</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section id="home" class="hero" aria-labelledby="hero-title">
+        <div class="hero-grid" aria-hidden="true"></div>
+        <div class="hero-content">
+          <div class="hero-copy">
+            <p class="section-signal">
+              <span class="signal-dot" aria-hidden="true"></span>
+              求职项目展示
+            </p>
+            <h1 id="hero-title">
+              <span>Mini</span>
+              <span>Mal1</span>
+            </h1>
+            <p class="hero-positioning">
+              基于 Next.js 的全栈微型电商项目
+            </p>
+            <p class="hero-intro">
+              一个可以完整走通注册登录、商品浏览、购物车、下单、模拟支付、
+              取消订单与超时回收的本地业务系统。展示页面只呈现真实实现，
+              完整业务继续运行在本地 Node.js + SQLite 环境中。
+            </p>
+
+            <ul class="tech-list" aria-label="技术栈">
+              <li>Next.js 16</li>
+              <li>TypeScript</li>
+              <li>Prisma</li>
+              <li>SQLite</li>
+              <li>Tailwind CSS</li>
+            </ul>
+
+            <div class="hero-actions">
+              <a class="button button-primary" href="#features">
+                查看项目功能
+                <span aria-hidden="true">↓</span>
+              </a>
+              <a
+                class="button button-secondary"
+                href="https://github.com/zhenwuchen/Mini-Mal"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GitHub 源码
+                <span class="button-note">公开仓库</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="order-board" aria-label="订单与支付状态示意">
+            <div class="board-heading">
+              <div>
+                <p>服务端状态</p>
+                <strong>订单生命周期</strong>
+              </div>
+              <span class="board-live">
+                <span aria-hidden="true"></span>
+                本机演示
+              </span>
+            </div>
+
+            <div class="order-rail" aria-label="订单状态流程">
+              <div class="order-node order-node-active">
+                <span>01</span>
+                <strong>待付款</strong>
+                <small>PENDING_PAYMENT</small>
+              </div>
+              <div class="order-branch">
+                <div class="order-node">
+                  <span>02A</span>
+                  <strong>已付款</strong>
+                  <small>PAID</small>
+                </div>
+                <div class="order-node">
+                  <span>02B</span>
+                  <strong>已取消</strong>
+                  <small>CANCELLED</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="payment-state">
+              <div class="payment-state-header">
+                <span>支付状态机</span>
+                <code>PENDING</code>
+              </div>
+              <div class="state-options" aria-label="支付状态分支">
+                <span class="state-success">SUCCEEDED</span>
+                <span>FAILED</span>
+                <span>CANCELLED</span>
+              </div>
+              <div class="deadline">
+                <span>支付窗口</span>
+                <strong>30 分钟</strong>
+                <small>数据库时间守卫截止边界</small>
+              </div>
+            </div>
+
+            <dl class="board-facts">
+              <div>
+                <dt>事务边界</dt>
+                <dd>Prisma transaction</dd>
+              </div>
+              <div>
+                <dt>并发保护</dt>
+                <dd>条件更新 + 重试</dd>
+              </div>
+              <div>
+                <dt>部署形态</dt>
+                <dd>单实例 SQLite</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+
+        <div class="hero-foot">
+          <p>
+            这是模拟支付项目，不接入真实资金渠道。
+          </p>
+          <a href="#architecture">
+            查看系统边界
+            <span aria-hidden="true">↘</span>
+          </a>
+        </div>
+      </section>
+
+      <section id="features" class="section features-section" aria-labelledby="features-title">
+        <div class="section-heading section-heading-split">
+          <div>
+            <p class="section-index">01 / 核心功能</p>
+            <h2 id="features-title">从挑选商品到回收订单，<br />每一段都有真实实现。</h2>
+          </div>
+          <p class="section-summary">
+            功能边界按用户操作顺序组织。页面不把规划项包装成已完成能力，
+            也不展示真实支付、物流或售后渠道。
+          </p>
+        </div>
+
+        <div class="feature-flow">
+          <article class="feature-stage">
+            <div class="stage-heading">
+              <span>01</span>
+              <div>
+                <h3>进入与挑选</h3>
+                <p>建立身份，浏览并维护待购商品。</p>
+              </div>
+            </div>
+            <ul class="feature-list">
+              <li>
+                <span class="feature-check" aria-hidden="true"></span>
+                <div>
+                  <h4>用户注册与登录</h4>
+                  <p>Credentials 登录、密码哈希、会话访问与用户隔离。</p>
+                </div>
+              </li>
+              <li>
+                <span class="feature-check" aria-hidden="true"></span>
+                <div>
+                  <h4>商品分类、列表与详情</h4>
+                  <p>分类筛选、商品展示和详情数据读取。</p>
+                </div>
+              </li>
+              <li>
+                <span class="feature-check" aria-hidden="true"></span>
+                <div>
+                  <h4>购物车管理</h4>
+                  <p>添加、调整数量、移除商品，并按实时库存校验。</p>
+                </div>
+              </li>
+            </ul>
+          </article>
+
+          <article class="feature-stage feature-stage-accent">
+            <div class="stage-heading">
+              <span>02</span>
+              <div>
+                <h3>提交与支付</h3>
+                <p>在事务中创建订单，模拟完整支付分支。</p>
+              </div>
+            </div>
+            <ul class="feature-list">
+              <li>
+                <span class="feature-check" aria-hidden="true"></span>
+                <div>
+                  <h4>收货地址与订单创建</h4>
+                  <p>保存地址快照，扣减库存并清理购物车。</p>
+                </div>
+              </li>
+              <li>
+                <span class="feature-check" aria-hidden="true"></span>
+                <div>
+                  <h4>模拟支付成功与失败</h4>
+                  <p>支持成功、失败和重试；不调用真实支付平台。</p>
+                </div>
+              </li>
+              <li>
+                <span class="feature-check" aria-hidden="true"></span>
+                <div>
+                  <h4>支付幂等与并发保护</h4>
+                  <p>幂等键约束、状态条件更新和有限 SQLite 写锁重试。</p>
+                </div>
+              </li>
+            </ul>
+          </article>
+
+          <article class="feature-stage">
+            <div class="stage-heading">
+              <span>03</span>
+              <div>
+                <h3>退出与回收</h3>
+                <p>让订单、支付和库存最终回到合法状态。</p>
+              </div>
+            </div>
+            <ul class="feature-list">
+              <li>
+                <span class="feature-check" aria-hidden="true"></span>
+                <div>
+                  <h4>取消订单与库存恢复</h4>
+                  <p>状态更新、取消待处理支付与逐项恢复库存保持在同一事务。</p>
+                </div>
+              </li>
+              <li>
+                <span class="feature-check" aria-hidden="true"></span>
+                <div>
+                  <h4>超时订单自动取消</h4>
+                  <p>外部 Cron 定时触发扫描，批处理和公平轮转避免长期饥饿。</p>
+                </div>
+              </li>
+              <li>
+                <span class="feature-check" aria-hidden="true"></span>
+                <div>
+                  <h4>内部任务接口鉴权</h4>
+                  <p>独立 Bearer Token、SHA-256 摘要比较与配置错误隔离。</p>
+                </div>
+              </li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="highlights" class="section highlights-section" aria-labelledby="highlights-title">
+        <div class="highlight-layout">
+          <div class="highlight-intro">
+            <p class="section-index">02 / 技术实现</p>
+            <h2 id="highlights-title">把业务正确性写进数据边界。</h2>
+            <p>
+              重点不在页面数量，而在订单、支付与库存如何避免重复扣减、
+              重复恢复和非法状态。以下能力均可在源码与测试中找到依据。
+            </p>
+            <div class="evidence-note">
+              <span aria-hidden="true">↳</span>
+              <p>代码路径均相对于项目根目录。</p>
+            </div>
+          </div>
+
+          <ol class="highlight-list">
+            <li>
+              <span class="highlight-number">01</span>
+              <div>
+                <h3>Prisma + SQLite 数据访问</h3>
+                <p>
+                  页面、Server Actions 与 Service 层共享 Prisma 数据访问，
+                  本地开发与当前生产方案均使用 SQLite。
+                </p>
+                <code>prisma/schema.prisma · src/lib/prisma.ts</code>
+              </div>
+            </li>
+            <li>
+              <span class="highlight-number">02</span>
+              <div>
+                <h3>支付状态机</h3>
+                <p>
+                  显式限制 PENDING、SUCCEEDED、FAILED、CANCELLED 与 REFUNDED
+                  之间的合法迁移。
+                </p>
+                <code>src/lib/payment-status.ts</code>
+              </div>
+            </li>
+            <li>
+              <span class="highlight-number">03</span>
+              <div>
+                <h3>支付幂等与并发保护</h3>
+                <p>
+                  同一幂等键复用原支付记录；完成支付时使用条件更新防止
+                  多个请求同时成功。
+                </p>
+                <code>src/lib/payment-service.ts · tests/payment.test.ts</code>
+              </div>
+            </li>
+            <li>
+              <span class="highlight-number">04</span>
+              <div>
+                <h3>订单取消事务</h3>
+                <p>
+                  取消状态、待处理支付与库存恢复共同提交；任一环节失败时
+                  整体回滚。
+                </p>
+                <code>src/lib/order-cancel-service.ts · tests/order-cancel.test.ts</code>
+              </div>
+            </li>
+            <li>
+              <span class="highlight-number">05</span>
+              <div>
+                <h3>库存恢复与重复保护</h3>
+                <p>
+                  按订单明细快照恢复数量；重复取消不会再次增加库存，
+                  并处理并发取消。
+                </p>
+                <code>src/lib/order-cancel-service.ts</code>
+              </div>
+            </li>
+            <li>
+              <span class="highlight-number">06</span>
+              <div>
+                <h3>支付截止时间保护</h3>
+                <p>
+                  下单时写入 30 分钟支付窗口，最终付款更新由数据库执行时间
+                  校验截止边界。
+                </p>
+                <code>src/lib/order-policy.ts · src/lib/payment-service.ts</code>
+              </div>
+            </li>
+            <li>
+              <span class="highlight-number">07</span>
+              <div>
+                <h3>超时扫描与公平轮转</h3>
+                <p>
+                  批次大小、时间预算与持久化游标共同限制单次任务，
+                  让持续失败订单不会永久占住扫描起点。
+                </p>
+                <code>src/lib/order-expiration-service.ts</code>
+              </div>
+            </li>
+            <li>
+              <span class="highlight-number">08</span>
+              <div>
+                <h3>内部任务 Bearer Token 鉴权</h3>
+                <p>
+                  内部接口验证 Base64URL Token、最小长度与摘要，
+                  通过 timingSafeEqual 比较摘要。
+                </p>
+                <code>src/lib/internal-task-auth.ts</code>
+              </div>
+            </li>
+            <li>
+              <span class="highlight-number">09</span>
+              <div>
+                <h3>SQLite 在线备份与恢复</h3>
+                <p>
+                  生产文档提供 SQLite Backup API 流程、校验和、完整性检查与
+                  恢复演练步骤。
+                </p>
+                <code>scripts/sqlite-backup.mjs · docs/production-deployment.md</code>
+              </div>
+            </li>
+            <li class="highlight-last">
+              <span class="highlight-number">10</span>
+              <div>
+                <h3>Node.js 单实例部署</h3>
+                <p>
+                  当前完整系统使用单个 Next.js 进程和持久化 SQLite 文件，
+                  由外部 Cron 每分钟调用内部任务接口。
+                </p>
+                <code>deploy/systemd/mini-mall.service.example</code>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section id="architecture" class="section architecture-section" aria-labelledby="architecture-title">
+        <div class="section-heading section-heading-split">
+          <div>
+            <p class="section-index">03 / 技术架构</p>
+            <h2 id="architecture-title">请求、服务、数据与外部触发。</h2>
+          </div>
+          <p class="section-summary">
+            架构图只表达当前代码中的实际调用关系。完整系统不会部署到
+            Vercel Serverless，展示站与业务运行时彼此独立。
+          </p>
+        </div>
+
+        <figure class="architecture-figure">
+          <div class="diagram-scroll">
+            <svg
+              class="architecture-diagram"
+              viewBox="0 0 1120 660"
+              role="img"
+              aria-labelledby="architecture-svg-title architecture-svg-description"
+            >
+              <title id="architecture-svg-title">Mini Mal1 技术架构</title>
+              <desc id="architecture-svg-description">
+                浏览器请求进入 Next.js App Router 页面、Server Actions 与 API Route，
+                再调用 Service 层并通过 Prisma 访问 SQLite。外部 Cron 调用内部订单过期接口，
+                经过 Bearer 鉴权、过期处理器与订单服务。
+              </desc>
+              <defs>
+                <marker
+                  id="arrow"
+                  viewBox="0 0 10 10"
+                  refX="9"
+                  refY="5"
+                  markerWidth="7"
+                  markerHeight="7"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M 0 0 L 10 5 L 0 10 z" class="arrow-head" />
+                </marker>
+                <pattern id="small-grid" width="28" height="28" patternUnits="userSpaceOnUse">
+                  <path d="M 28 0 L 0 0 0 28" class="diagram-grid" />
+                </pattern>
+              </defs>
+
+              <rect width="1120" height="660" fill="url(#small-grid)" />
+
+              <text x="54" y="55" class="diagram-label">用户请求路径</text>
+              <line x1="54" y1="72" x2="1066" y2="72" class="diagram-rule" />
+
+              <g class="diagram-group">
+                <rect x="56" y="102" width="180" height="112" rx="2" />
+                <text x="80" y="133" class="diagram-kicker">Browser</text>
+                <text x="80" y="164" class="diagram-title">用户浏览器</text>
+                <text x="80" y="190" class="diagram-note">页面交互与表单</text>
+              </g>
+              <path d="M236 158 H334" class="diagram-arrow" marker-end="url(#arrow)" />
+
+              <g class="diagram-group">
+                <rect x="334" y="92" width="274" height="132" rx="2" />
+                <text x="358" y="123" class="diagram-kicker">Next.js 16</text>
+                <text x="358" y="154" class="diagram-title">App Router</text>
+                <text x="358" y="181" class="diagram-note">页面 · Server Actions</text>
+                <text x="358" y="204" class="diagram-note">API Route · 会话</text>
+              </g>
+              <path d="M608 158 H706" class="diagram-arrow" marker-end="url(#arrow)" />
+
+              <g class="diagram-group diagram-group-strong">
+                <rect x="706" y="92" width="358" height="132" rx="2" />
+                <text x="730" y="123" class="diagram-kicker">Application boundary</text>
+                <text x="730" y="154" class="diagram-title">Service 层</text>
+                <text x="730" y="181" class="diagram-note">认证 · 购物车 · 订单 · 支付 · 取消</text>
+                <text x="730" y="204" class="diagram-note">超时扫描 · 内部任务鉴权</text>
+              </g>
+
+              <path d="M885 224 V302" class="diagram-arrow" marker-end="url(#arrow)" />
+
+              <g class="diagram-group">
+                <rect x="706" y="302" width="358" height="104" rx="2" />
+                <text x="730" y="333" class="diagram-kicker">Data access</text>
+                <text x="730" y="364" class="diagram-title">Prisma Client</text>
+                <text x="730" y="390" class="diagram-note">类型化查询 · Transaction</text>
+              </g>
+              <path d="M885 406 V476" class="diagram-arrow" marker-end="url(#arrow)" />
+
+              <g class="diagram-group diagram-group-data">
+                <rect x="706" y="476" width="358" height="116" rx="2" />
+                <text x="730" y="507" class="diagram-kicker">Persistent data</text>
+                <text x="730" y="538" class="diagram-title">SQLite 数据库文件</text>
+                <text x="730" y="565" class="diagram-note">单实例写入 · 持久化卷 · 外部备份</text>
+              </g>
+
+              <text x="54" y="374" class="diagram-label">独立自动化路径</text>
+              <line x1="54" y1="391" x2="630" y2="391" class="diagram-rule" />
+
+              <g class="diagram-group diagram-group-cron">
+                <rect x="56" y="430" width="180" height="112" rx="2" />
+                <text x="80" y="461" class="diagram-kicker">Every minute</text>
+                <text x="80" y="492" class="diagram-title">外部 Cron</text>
+                <text x="80" y="518" class="diagram-note">HTTPS POST</text>
+              </g>
+              <path d="M236 486 H334" class="diagram-arrow" marker-end="url(#arrow)" />
+
+              <g class="diagram-group">
+                <rect x="334" y="430" width="274" height="112" rx="2" />
+                <text x="358" y="461" class="diagram-kicker">Internal endpoint</text>
+                <text x="358" y="492" class="diagram-title">订单过期接口</text>
+                <text x="358" y="518" class="diagram-note">Bearer Token · 请求预算</text>
+              </g>
+              <path d="M608 486 H684" class="diagram-arrow" marker-end="url(#arrow)" />
+              <path d="M682 486 H706" class="diagram-arrow diagram-arrow-highlight" marker-end="url(#arrow)" />
+            </svg>
+          </div>
+          <figcaption>
+            <span>边界说明</span>
+            <p>
+              浏览器只访问本机 Next.js 应用；外部 Cron 只调用受保护的订单过期接口。
+              两条路径最终共享 Service 层和 SQLite 数据。
+            </p>
+          </figcaption>
+        </figure>
+
+        <div class="architecture-notes">
+          <article>
+            <span>App Router</span>
+            <h3>页面与接口同仓</h3>
+            <p>商品、购物车与账户页面位于 App Router；内部任务由 Route Handler 暴露。</p>
+          </article>
+          <article>
+            <span>Consistency</span>
+            <h3>一致性集中在服务层</h3>
+            <p>支付、取消和超时逻辑复用 Service，不把数据库写入散落到页面组件。</p>
+          </article>
+          <article>
+            <span>Hosting</span>
+            <h3>展示与运行分离</h3>
+            <p>本页可以静态部署；完整电商系统仍使用 Node.js 单实例和持久化 SQLite。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="demo" class="section demo-section" aria-labelledby="demo-title">
+        <div class="section-heading section-heading-split">
+          <div>
+            <p class="section-index">04 / 项目演示</p>
+            <h2 id="demo-title">真实页面，现有截图。</h2>
+          </div>
+          <p class="section-summary">
+            下列图片来自项目本地运行后的真实页面截图，测试数据仅用于界面验收。
+            未提供的视频与补充场景使用明确占位。
+          </p>
+        </div>
+
+        <div class="screenshot-gallery">
+          <figure class="screenshot screenshot-wide">
+            <a href="assets/screenshots/home.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/home.png"
+                alt="Mini Mall 首页桌面端真实截图，展示品牌首屏、分类与热门商品"
+                width="1440"
+                height="1000"
+              />
+            </a>
+            <figcaption>
+              <span>项目首页</span>
+              <p>品牌首屏、分类入口和商品陈列，桌面端真实截图。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot">
+            <a href="assets/screenshots/products.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/products.png"
+                alt="商品列表页真实截图，展示分类筛选与商品网格"
+                width="1265"
+                height="3456"
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              <span>商品列表</span>
+              <p>分类与商品数据的真实读取结果。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot">
+            <a href="assets/screenshots/product-detail.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/product-detail.png"
+                alt="商品详情页真实截图，展示商品信息、库存和加入购物车区域"
+                width="1440"
+                height="3083"
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              <span>商品详情</span>
+              <p>价格、库存、数量与购买操作集中呈现。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot">
+            <a href="assets/screenshots/cart.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/cart.png"
+                alt="购物车页面真实截图，展示商品数量控制和订单摘要"
+                width="1440"
+                height="1779"
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              <span>购物车</span>
+              <p>数量调整与服务端汇总金额。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot">
+            <a href="assets/screenshots/orders.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/orders.png"
+                alt="订单列表页面真实截图，展示测试订单及状态"
+                width="1440"
+                height="2522"
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              <span>订单列表</span>
+              <p>用户订单查询与状态展示，截图中为测试数据。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot">
+            <a href="assets/screenshots/order-detail.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/order-detail.png"
+                alt="订单详情页面真实截图，展示商品快照、金额与收货信息"
+                width="1440"
+                height="1830"
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              <span>订单详情</span>
+              <p>商品与收货地址快照、金额明细和订单状态。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot screenshot-mobile">
+            <a href="assets/screenshots/login.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/login.png"
+                alt="登录页面真实截图，展示账号密码表单"
+                width="1440"
+                height="1333"
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              <span>登录</span>
+              <p>Credentials 登录入口。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot screenshot-mobile">
+            <a href="assets/screenshots/cart-mobile.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/cart-mobile.png"
+                alt="购物车移动端真实截图，展示窄屏下的商品与数量控制"
+                width="375"
+                height="2129"
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              <span>移动端购物车</span>
+              <p>375px 宽度下的真实布局。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot screenshot-mobile">
+            <a href="assets/screenshots/home-mobile.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/home-mobile.png"
+                alt="项目首页移动端真实截图，展示窄屏下的品牌首屏与商品内容"
+                width="375"
+                height="4967"
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              <span>移动端首页</span>
+              <p>375px 宽度下的完整页面。</p>
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="video-demo">
+          <div class="video-copy">
+            <p class="section-index">待录制</p>
+            <h3>演示视频待录制</h3>
+            <p>
+              当前没有真实演示视频，因此不使用生成视频或模拟播放器。
+              录制计划覆盖首页、商品、购物车、下单、两种支付结果、
+              取消订单、超时任务与技术解释。
+            </p>
+          </div>
+          <div class="video-placeholder" aria-label="演示视频占位区域">
+            <span class="play-placeholder" aria-hidden="true"></span>
+            <p>视频区域预留 · 建议 1920 × 1080</p>
+            <small>录制后替换为静态站可访问的真实视频地址</small>
+          </div>
+        </div>
+      </section>
+
+      <section id="local-run" class="section local-section" aria-labelledby="local-title">
+        <div class="local-layout">
+          <div class="local-intro">
+            <p class="section-index">05 / 本地运行</p>
+            <h2 id="local-title">完整系统在自己的机器上运行。</h2>
+            <p>
+              展示站无需 Node.js 服务。下面的步骤用于启动完整的 Next.js
+              电商系统，数据库初始化和演示数据准备都需在仓库根目录执行。
+            </p>
+            <div class="local-warning">
+              <strong>不要把这些内容部署到静态展示站：</strong>
+              <p>数据库文件、环境变量、AUTH_SECRET、CRON_SECRET 与业务 API。</p>
+            </div>
+          </div>
+
+          <ol class="runbook">
+            <li>
+              <div class="runbook-title">
+                <span>01</span>
+                <div>
+                  <h3>确认 Node.js</h3>
+                  <p>项目要求 Node.js 22.19.x，当前范围为 &gt;=22.19.0 &lt;23。</p>
+                </div>
+              </div>
+              <div class="command">
+                <code>node --version</code>
+                <button type="button" data-copy="node --version">复制</button>
+              </div>
+            </li>
+            <li>
+              <div class="runbook-title">
+                <span>02</span>
+                <div>
+                  <h3>安装依赖</h3>
+                  <p>按锁文件安装，避免依赖版本漂移。</p>
+                </div>
+              </div>
+              <div class="command">
+                <code>npm ci</code>
+                <button type="button" data-copy="npm ci">复制</button>
+              </div>
+            </li>
+            <li>
+              <div class="runbook-title">
+                <span>03</span>
+                <div>
+                  <h3>准备环境变量</h3>
+                  <p>从示例文件创建本地配置，并填入自己的随机 Secret。</p>
+                </div>
+              </div>
+              <div class="command">
+                <code>Copy-Item .env.example .env</code>
+                <button type="button" data-copy="Copy-Item .env.example .env">复制</button>
+              </div>
+            </li>
+            <li>
+              <div class="runbook-title">
+                <span>04</span>
+                <div>
+                  <h3>生成 Prisma Client</h3>
+                  <p>读取现有 Schema，不修改数据库结构。</p>
+                </div>
+              </div>
+              <div class="command">
+                <code>npm run db:generate</code>
+                <button type="button" data-copy="npm run db:generate">复制</button>
+              </div>
+            </li>
+            <li>
+              <div class="runbook-title">
+                <span>05</span>
+                <div>
+                  <h3>初始化全新数据库</h3>
+                  <p>使用仓库中已提交的 Migration。商城演示数据按需 seed。</p>
+                </div>
+              </div>
+              <div class="command">
+                <code>npm run db:migrate:deploy</code>
+                <button type="button" data-copy="npm run db:migrate:deploy">复制</button>
+              </div>
+            </li>
+            <li>
+              <div class="runbook-title">
+                <span>06</span>
+                <div>
+                  <h3>启动开发环境</h3>
+                  <p>打开终端提示的本地地址查看完整商城。</p>
+                </div>
+              </div>
+              <div class="command">
+                <code>npm run dev</code>
+                <button type="button" data-copy="npm run dev">复制</button>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <aside id="source-note" class="source-note" aria-labelledby="source-note-title">
+        <div>
+          <p class="section-index">源码入口</p>
+          <h2 id="source-note-title">GitHub 仓库已确认。</h2>
+        </div>
+        <p>
+          项目源码位于 zhenwuchen/Mini-Mal。环境文件、本地 SQLite 数据库、
+          构建产物和内部任务凭证已被排除在公开源码之外。
+        </p>
+      </aside>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <span class="brand-mark" aria-hidden="true">M</span>
+        <div>
+          <strong>Mini Mal1</strong>
+          <p>Next.js 全栈微型电商项目展示</p>
+        </div>
+      </div>
+      <div class="footer-meta">
+        <p>模拟支付 · SQLite 单实例 · 本地完整业务演示</p>
+        <p>静态展示站不连接业务数据库与内部任务接口。</p>
+      </div>
+      <a href="#home">返回顶部 ↑</a>
+    </footer>
+  </body>
+</html>
