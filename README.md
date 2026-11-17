@@ -12,6 +12,13 @@
 
 GitHub 仓库：<https://github.com/zhenwuchen/Mini-Mal>
 
+## 项目效果
+
+![Mini Mal1 首页真实截图](showcase/assets/screenshots/home.png)
+
+截图来自本地运行后的真实页面，测试数据仅用于界面验收。完整截图与视频录制
+计划见 [`screenshots/README.md`](screenshots/README.md)。
+
 ## 项目定位与开发目标
 
 这个项目不是通用的电商脚手架，也不是接入真实资金渠道的生产商城。它以可以
@@ -95,17 +102,6 @@ flowchart LR
 `src/lib/internal-task-auth.ts` 使用独立 `CRON_SECRET`，验证 Base64URL 格式、
 最小解码长度和 Bearer Token，并通过 SHA-256 摘要与 `timingSafeEqual` 比较。
 该密钥不会回退到 `AUTH_SECRET`，也不会暴露在响应中。
-
-## 项目运行截图
-
-以下截图来自本地运行后的真实页面，测试数据仅用于界面验收。完整截图清单见
-[`screenshots/README.md`](screenshots/README.md)。
-
-![Mini Mal1 首页真实截图](showcase/assets/screenshots/home.png)
-
-| 商品列表 | 商品详情 |
-| --- | --- |
-| ![商品列表](showcase/assets/screenshots/products.png) | ![商品详情](showcase/assets/screenshots/product-detail.png) |
 
 ## 本地运行方式
 
