@@ -10,6 +10,7 @@ import {
   type CheckoutActionState,
 } from "@/lib/checkout-action";
 import { formatPrice } from "@/lib/catalog";
+import { useFormValuePreservation } from "@/lib/form-value-preservation";
 
 type CheckoutAddress = {
   id: string;
@@ -52,9 +53,18 @@ export function CheckoutForm({
   >(checkoutAction, initialCheckoutActionState);
   const defaultAddressId =
     addresses.find((address) => address.isDefault)?.id ?? addresses[0]?.id;
+  const { formRef, preserveSubmittedValues } =
+    useFormValuePreservation(
+      state.status === "error" ? state : null,
+    );
 
   return (
-    <form action={formAction} className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start xl:gap-20">
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={preserveSubmittedValues}
+      className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start xl:gap-20"
+    >
       <input type="hidden" name="checkoutKey" value={checkoutKey} />
 
       <div className="min-w-0">

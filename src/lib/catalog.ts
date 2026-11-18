@@ -20,6 +20,7 @@ export type ProductCardData = {
 
 export type ShoppingCategory = {
   name: ProductCategory;
+  slug: string;
   label: string;
   description: string;
   image: string;
@@ -29,31 +30,35 @@ export type ShoppingCategory = {
 export const categories: ShoppingCategory[] = [
   {
     name: "Electronics",
+    slug: "electronics",
     label: "数码电子",
     description: "让技术安静地融入日常",
     image: "/images/categories/electronics.jpg",
-    href: "#products",
+    href: "/products?category=electronics",
   },
   {
     name: "Fashion",
+    slug: "fashion",
     label: "服饰穿搭",
     description: "克制剪裁与自然质地",
     image: "/images/categories/fashion.jpg",
-    href: "#products",
+    href: "/products?category=fashion",
   },
   {
     name: "Home & Living",
+    slug: "home-living",
     label: "家居生活",
     description: "为空间留下呼吸的余地",
     image: "/images/categories/home-living.jpg",
-    href: "#products",
+    href: "/products?category=home-living",
   },
   {
     name: "Beauty",
+    slug: "beauty",
     label: "美妆个护",
     description: "温和而有效的每日仪式",
     image: "/images/categories/beauty.jpg",
-    href: "#products",
+    href: "/products?category=beauty",
   },
 ];
 

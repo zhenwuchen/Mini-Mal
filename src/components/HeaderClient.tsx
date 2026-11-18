@@ -166,7 +166,7 @@ export function HeaderClient({
             aria-expanded={searchOpen}
             aria-controls="header-search"
             onClick={openSearch}
-            className="grid size-9 place-items-center text-ink transition-colors hover:text-earth sm:size-10"
+            className="grid size-11 place-items-center text-ink transition-colors hover:text-earth sm:size-10"
           >
             <SearchIcon className="size-[18px]" />
           </button>
@@ -223,7 +223,7 @@ export function HeaderClient({
           <Link
             href="/cart"
             aria-label={getCartAriaLabel(cartQuantity)}
-            className="relative grid size-9 place-items-center text-ink transition-colors hover:text-earth sm:size-10"
+            className="relative grid size-11 place-items-center text-ink transition-colors hover:text-earth sm:size-10"
           >
             <BagIcon className="size-[18px]" />
             {cartBadge && (
@@ -242,7 +242,7 @@ export function HeaderClient({
             aria-expanded={menuOpen}
             aria-controls="mobile-navigation"
             onClick={() => setMenuOpen(true)}
-            className="grid size-9 place-items-center text-ink sm:size-10 lg:hidden"
+            className="grid size-11 place-items-center text-ink sm:size-10 lg:hidden"
           >
             <MenuIcon className="size-[22px]" />
           </button>

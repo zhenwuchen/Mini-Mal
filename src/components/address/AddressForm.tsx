@@ -12,6 +12,7 @@ import {
   type AddressActionState,
 } from "@/lib/address-action";
 import type { AddressSummary } from "@/lib/address-service";
+import { useFormValuePreservation } from "@/lib/form-value-preservation";
 
 const inputClassName =
   "mt-2 min-h-12 w-full border border-rule bg-paper px-4 text-sm text-ink transition-colors placeholder:text-muted/55 hover:border-ink/40 focus-visible:border-earth";
@@ -35,12 +36,21 @@ export function AddressForm(props: AddressFormProps) {
     AddressActionState,
     FormData
   >(action, initialAddressActionState);
+  const { formRef, preserveSubmittedValues } =
+    useFormValuePreservation(
+      state.status === "error" ? state : null,
+    );
   const address = props.mode === "edit" ? props.address : null;
   const errors = state.fieldErrors;
   const prefix = props.mode === "create" ? "new" : "edit";
 
   return (
-    <form action={formAction} noValidate>
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={preserveSubmittedValues}
+      noValidate
+    >
       {address && (
         <input type="hidden" name="addressId" value={address.id} />
       )}

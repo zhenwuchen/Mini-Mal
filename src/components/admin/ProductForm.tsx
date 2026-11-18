@@ -10,6 +10,7 @@ import {
 } from "@/lib/admin-action-state";
 import type { AdminProductSummary } from "@/lib/admin-product-service";
 import { formatAdminPriceInput } from "@/lib/admin-product";
+import { useFormValuePreservation } from "@/lib/form-value-preservation";
 
 type CategoryOption = {
   id: string;
@@ -30,9 +31,18 @@ export function ProductForm({
     saveProductAction,
     initialAdminActionState,
   );
+  const { formRef, preserveSubmittedValues } =
+    useFormValuePreservation(
+      state.status === "error" ? state : null,
+    );
 
   return (
-    <form action={formAction} className="space-y-8">
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={preserveSubmittedValues}
+      className="space-y-8"
+    >
       {product && (
         <input type="hidden" name="productId" value={product.id} />
       )}

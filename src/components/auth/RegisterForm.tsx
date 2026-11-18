@@ -4,6 +4,7 @@ import { useActionState } from "react";
 
 import { registerAction } from "@/app/actions/auth";
 import { initialAuthActionState } from "@/lib/auth-action-state";
+import { useFormValuePreservation } from "@/lib/form-value-preservation";
 
 const inputClassName =
   "mt-2 min-h-12 w-full border border-rule bg-paper px-4 text-sm text-ink transition-colors placeholder:text-muted/55 hover:border-ink/40 focus-visible:border-earth";
@@ -17,10 +18,19 @@ export function RegisterForm({ returnTo }: RegisterFormProps) {
     registerAction,
     initialAuthActionState,
   );
+  const { formRef, preserveSubmittedValues } =
+    useFormValuePreservation(
+      state.status === "error" ? state : null,
+    );
   const errors = state.fieldErrors;
 
   return (
-    <form action={action} noValidate>
+    <form
+      ref={formRef}
+      action={action}
+      onSubmit={preserveSubmittedValues}
+      noValidate
+    >
       <div className="mb-8">
         <p className="text-[10px] font-medium tracking-[0.18em] text-muted uppercase">
           Create account

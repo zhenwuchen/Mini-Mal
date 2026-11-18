@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { ArrowRightIcon } from "@/components/Icons";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductDetailScrollReset } from "@/components/ProductDetailScrollReset";
 import { ProductGallery } from "@/components/ProductGallery";
 import { ProductPurchasePanel } from "@/components/ProductPurchasePanel";
 import { SkipLink } from "@/components/SkipLink";
@@ -72,6 +73,7 @@ function ProductDetailContent({
 
   return (
     <>
+      <ProductDetailScrollReset slug={product.slug} />
       <div className="mx-auto w-full max-w-[1440px] px-5 pt-7 sm:px-8 sm:pt-9 lg:px-12 xl:px-16">
         <nav
           aria-label="面包屑"
@@ -232,6 +234,7 @@ function ProductDetailContent({
               <ProductCard
                 key={relatedProduct.id}
                 product={relatedProduct}
+                scrollToTopOnNavigate
               />
             ))}
           </div>

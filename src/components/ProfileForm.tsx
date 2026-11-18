@@ -6,6 +6,7 @@ import { updateProfileAction } from "@/app/actions/profile";
 import {
   initialProfileActionState,
 } from "@/lib/profile-action-state";
+import { useFormValuePreservation } from "@/lib/form-value-preservation";
 
 export function ProfileForm({
   name,
@@ -16,9 +17,18 @@ export function ProfileForm({
     updateProfileAction,
     initialProfileActionState,
   );
+  const { formRef, preserveSubmittedValues } =
+    useFormValuePreservation(
+      state.status === "error" ? state : null,
+    );
 
   return (
-    <form action={formAction} noValidate>
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={preserveSubmittedValues}
+      noValidate
+    >
       {state.status === "error" && state.message && (
         <p
           role="alert"

@@ -8,6 +8,7 @@ import {
   initialAdminActionState,
 } from "@/lib/admin-action-state";
 import type { AdminCategorySummary } from "@/lib/admin-category-service";
+import { useFormValuePreservation } from "@/lib/form-value-preservation";
 
 export function CategoryForm({
   category,
@@ -20,10 +21,19 @@ export function CategoryForm({
     saveCategoryAction,
     initialAdminActionState,
   );
+  const { formRef, preserveSubmittedValues } =
+    useFormValuePreservation(
+      state.status === "error" ? state : null,
+    );
   const idPrefix = category ? `category-${category.id}` : "new-category";
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={preserveSubmittedValues}
+      className="space-y-5"
+    >
       {category && (
         <input
           type="hidden"

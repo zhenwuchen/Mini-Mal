@@ -25,6 +25,9 @@ const databaseUrl = `file:${databasePath.replaceAll("\\", "/")}`;
 const suiteCommands = {
   deploy: "_test:deploy-scripts",
   unit: "_test:unit",
+  "storefront-navigation": "_test:storefront-navigation",
+  "product-detail-navigation": "_test:product-detail-navigation",
+  "ui-integration": "_test:ui-integration",
   "internal-task-auth": "_test:internal-task-auth",
   "internal-order-expiration-handler":
     "_test:internal-order-expiration-handler",
