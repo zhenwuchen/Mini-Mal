@@ -16,6 +16,8 @@ import { formatPrice } from "@/lib/catalog";
 import { normalizeLocalImagePath } from "@/lib/image-path";
 import { prisma } from "@/lib/prisma";
 
+export const instant = false;
+
 const productService = createAdminProductService({ prisma });
 
 const flashMessages: Record<string, string> = {
@@ -135,7 +137,8 @@ export default async function AdminProductsPage({
         </div>
 
         {result.products.length > 0 ? (
-          <div className="mt-4 overflow-x-auto border border-rule bg-paper">
+          <>
+          <div className="mt-4 hidden overflow-x-auto border border-rule bg-paper md:block">
             <table className="w-full min-w-[980px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-rule bg-[#ece6dd]/75 text-[9px] tracking-[0.1em] text-muted">
@@ -187,39 +190,73 @@ export default async function AdminProductsPage({
                       {product.category.name}
                     </td>
                     <td className="px-4 py-4">
-                      <span
-                        className={`inline-flex min-h-7 items-center border px-2.5 text-[9px] font-medium tracking-[0.08em] ${
-                          product.isActive
-                            ? "border-[#55735a]/30 bg-[#55735a]/7 text-[#49644e]"
-                            : "border-muted/25 bg-muted/5 text-muted"
-                        }`}
-                      >
-                        {product.isActive ? "已上架" : "已下架"}
-                      </span>
+                      <ProductStatusBadge isActive={product.isActive} />
                     </td>
                     <td className="whitespace-nowrap px-4 py-4 text-[10px] text-muted">
                       {formatAdminDate(product.createdAt)}
                     </td>
                     <td className="px-4 py-4">
-                      <div className="flex items-start justify-end gap-1">
-                        <Link
-                          href={`/admin/products/${encodeURIComponent(product.id)}/edit`}
-                          className="inline-flex min-h-9 items-center px-2 text-[10px] font-medium text-ink transition-colors hover:text-earth"
-                        >
-                          编辑
-                        </Link>
-                        <ProductStatusForm
-                          productId={product.id}
-                          isActive={product.isActive}
-                        />
-                        <ProductArchiveForm productId={product.id} />
-                      </div>
+                      <ProductActions product={product} align="end" />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          <ul className="mt-4 divide-y divide-rule border border-rule bg-paper md:hidden">
+            {result.products.map((product) => (
+              <li key={product.id} className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="relative aspect-[4/5] w-16 shrink-0 overflow-hidden bg-[#e7dfd5]">
+                    <CatalogImage
+                      src={productImage(
+                        product.imageUrl,
+                        product.category.slug,
+                      )}
+                      alt={product.name}
+                      sizes="64px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h2 className="break-words text-sm font-medium text-ink">
+                          {product.name}
+                        </h2>
+                        <p className="mt-1 break-all text-[10px] text-muted">
+                          {product.slug}
+                        </p>
+                      </div>
+                      <ProductStatusBadge isActive={product.isActive} />
+                    </div>
+                    <dl className="mt-4 grid grid-cols-3 gap-3 border-t border-rule/70 pt-3">
+                      <MobileProductDatum
+                        label="价格"
+                        value={formatPrice(product.price)}
+                      />
+                      <MobileProductDatum
+                        label="库存"
+                        value={String(product.stock)}
+                      />
+                      <MobileProductDatum
+                        label="分类"
+                        value={product.category.name}
+                      />
+                    </dl>
+                  </div>
+                </div>
+                <div className="mt-4 flex items-end justify-between gap-3 border-t border-rule/70 pt-3">
+                  <p className="text-[9px] leading-4 text-muted">
+                    创建于 {formatAdminDate(product.createdAt)}
+                  </p>
+                  <ProductActions product={product} align="end" />
+                </div>
+              </li>
+            ))}
+          </ul>
+          </>
         ) : (
           <div className="border-y border-rule py-16 text-center sm:py-20">
             <h2 className="font-serif text-3xl tracking-[-0.04em]">
@@ -246,6 +283,72 @@ export default async function AdminProductsPage({
             status={search.status}
           />
         )}
+    </div>
+  );
+}
+
+function ProductStatusBadge({ isActive }: { isActive: boolean }) {
+  return (
+    <span
+      className={`inline-flex min-h-7 shrink-0 items-center border px-2.5 text-[9px] font-medium tracking-[0.08em] ${
+        isActive
+          ? "border-[#55735a]/30 bg-[#55735a]/7 text-[#49644e]"
+          : "border-muted/25 bg-muted/5 text-muted"
+      }`}
+    >
+      {isActive ? "已上架" : "已下架"}
+    </span>
+  );
+}
+
+function MobileProductDatum({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[8px] tracking-[0.08em] text-muted">{label}</dt>
+      <dd className="mt-1 break-words text-xs tabular-nums text-ink">
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+function ProductActions({
+  product,
+  align,
+}: {
+  product: {
+    id: string;
+    name: string;
+    isActive: boolean;
+  };
+  align: "start" | "end";
+}) {
+  return (
+    <div
+      className={`flex flex-wrap gap-1 ${
+        align === "end" ? "justify-end" : "justify-start"
+      }`}
+    >
+      <Link
+        href={`/admin/products/${encodeURIComponent(product.id)}/edit`}
+        className="inline-flex min-h-9 items-center px-2 text-[10px] font-medium text-ink transition-colors hover:text-earth"
+      >
+        编辑
+      </Link>
+      <ProductStatusForm
+        productId={product.id}
+        isActive={product.isActive}
+      />
+      <ProductArchiveForm
+        productId={product.id}
+        productName={product.name}
+      />
     </div>
   );
 }

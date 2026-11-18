@@ -11,6 +11,8 @@ import { createAdminCategoryService } from "@/lib/admin-category-service";
 import { requireAdmin } from "@/lib/auth-session";
 import { prisma } from "@/lib/prisma";
 
+export const instant = false;
+
 const categoryService = createAdminCategoryService({ prisma });
 
 const flashMessages: Record<string, string> = {
@@ -119,6 +121,7 @@ export default async function AdminCategoriesPage({
                         </details>
                         <CategoryDeleteForm
                           categoryId={category.id}
+                          categoryName={category.name}
                           productCount={category.productCount}
                         />
                       </div>

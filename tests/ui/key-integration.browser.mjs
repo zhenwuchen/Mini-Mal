@@ -251,8 +251,67 @@ export async function runKeyIntegrationBrowserTest(page, baseUrl) {
     ).join("; ")}`,
   );
 
+  await openHarness();
+  const archiveTrigger = page.getByRole("button", {
+    name: "归档示例商品",
+  });
+  await archiveTrigger.click();
+
+  const confirmDialog = page.getByRole("dialog", {
+    name: "归档并下架商品？",
+  });
+  await confirmDialog.waitFor();
+  assert(
+    (await confirmDialog.innerText()).includes("示例商品"),
+    "归档确认框应明确展示商品名称",
+  );
+  assert(
+    (await confirmDialog.innerText()).includes("历史订单快照"),
+    "归档确认框应说明不会物理删除历史快照",
+  );
+
+  await page.keyboard.press("Escape");
+  await confirmDialog.waitFor({ state: "hidden" });
+  assert(
+    await archiveTrigger.evaluate(
+      (element) => element === document.activeElement,
+    ),
+    "关闭归档确认框后应把焦点还给触发按钮",
+  );
+
+  await archiveTrigger.click();
+  await page.getByRole("button", { name: "取消" }).click();
+  await confirmDialog.waitFor({ state: "hidden" });
+  assert(
+    (await page.getByRole("status").count()) === 0,
+    "取消归档不应执行确认回调",
+  );
+
+  await archiveTrigger.click();
+  await page.getByRole("button", { name: "确认归档" }).click();
+  await confirmDialog.waitFor({ state: "hidden" });
+  await page.getByText("示例商品已归档", { exact: true }).waitFor();
+
+  await page.evaluate(() => {
+    window.__adminMutationAttempts = 0;
+  });
+  const mutationButton = page.getByRole("button", {
+    name: "执行测试操作",
+  });
+  await mutationButton.evaluate((button) => {
+    button.click();
+    button.click();
+  });
+  await page.getByText("测试后台操作完成", { exact: true }).waitFor();
+  assert(
+    (await page.evaluate(
+      () => window.__adminMutationAttempts,
+    )) === 1,
+    "后台写操作在请求期间应阻止重复提交",
+  );
+
   return {
     ok: true,
-    assertions: 12,
+    assertions: 20,
   };
 }

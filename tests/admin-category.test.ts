@@ -122,3 +122,24 @@ test("refuses to delete a category that still owns products", async () => {
     1,
   );
 });
+
+test("deletes an empty category and returns its name", async () => {
+  const category = await service.create({
+    name: "可删除空分类",
+    slug: "admin-deletable-category",
+    description: null,
+  });
+
+  const deleted = await service.delete(category.id);
+
+  assert.deepEqual(deleted, {
+    id: category.id,
+    name: "可删除空分类",
+  });
+  assert.equal(
+    await database.prisma.category.count({
+      where: { id: category.id },
+    }),
+    0,
+  );
+});

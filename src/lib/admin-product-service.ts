@@ -77,6 +77,7 @@ export type AdminProductService = {
   setActive(id: string, isActive: boolean): Promise<AdminProductSummary>;
   archive(id: string): Promise<{
     id: string;
+    name: string;
     mode: "ARCHIVED";
     hadOrderHistory: boolean;
   }>;
@@ -157,7 +158,7 @@ export function createAdminProductService({
     };
 
     try {
-      const [totalCount, products] = await prisma.$transaction([
+      const [totalCount, initialProducts] = await prisma.$transaction([
         prisma.product.count({ where }),
         prisma.product.findMany({
           where,
@@ -170,16 +171,32 @@ export function createAdminProductService({
           take: pageSize,
         }),
       ]);
+      const totalPages =
+        totalCount === 0
+          ? 0
+          : Math.ceil(totalCount / Math.min(pageSize, MAX_PAGE_SIZE));
+      const effectivePage =
+        totalPages > 0 ? Math.min(page, totalPages) : 1;
+      const products =
+        initialProducts.length > 0 || effectivePage === page
+          ? initialProducts
+          : await prisma.product.findMany({
+              where,
+              select: productSelect,
+              orderBy: [
+                { createdAt: "desc" },
+                { id: "asc" },
+              ],
+              skip: (effectivePage - 1) * pageSize,
+              take: pageSize,
+            });
 
       return {
         products,
         totalCount,
-        page,
+        page: effectivePage,
         pageSize,
-        totalPages:
-          totalCount === 0
-            ? 0
-            : Math.ceil(totalCount / Math.min(pageSize, MAX_PAGE_SIZE)),
+        totalPages,
       };
     } catch {
       throw new AdminProductError("PRODUCT_OPERATION_FAILED");
@@ -306,6 +323,7 @@ export function createAdminProductService({
       where: { id },
       select: {
         id: true,
+        name: true,
         _count: {
           select: { orderItems: true },
         },
@@ -323,6 +341,7 @@ export function createAdminProductService({
 
     return {
       id,
+      name: product.name,
       mode: "ARCHIVED" as const,
       hadOrderHistory: product._count.orderItems > 0,
     };

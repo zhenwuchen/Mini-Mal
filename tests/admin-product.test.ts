@@ -268,8 +268,53 @@ test("archives products with order history without leaving the order snapshot", 
   });
 
   assert.equal(result.mode, "ARCHIVED");
+  assert.equal(result.name, "历史订单商品");
   assert.equal(result.hadOrderHistory, true);
   assert.equal(archived.isActive, false);
   assert.equal(savedItem.productName, "历史订单商品");
   assert.equal(savedItem.productId, product.id);
+});
+
+test("clamps the last product page after archiving its final item", async () => {
+  const category = await database.prisma.category.create({
+    data: {
+      name: "分页归档分类",
+      slug: `admin-product-pagination-${Date.now()}`,
+    },
+  });
+
+  for (let index = 0; index < 13; index += 1) {
+    await service.create({
+      name: `分页归档商品 ${index + 1}`,
+      description: null,
+      price: 1_000 + index,
+      imageUrl: null,
+      stock: 1,
+      categoryId: category.id,
+      isActive: true,
+    });
+  }
+
+  const secondPage = await service.list({
+    q: "",
+    categoryId: category.id,
+    status: "active",
+    page: 2,
+  });
+  assert.equal(secondPage.page, 2);
+  assert.equal(secondPage.products.length, 1);
+
+  await service.archive(secondPage.products[0].id);
+
+  const afterArchive = await service.list({
+    q: "",
+    categoryId: category.id,
+    status: "active",
+    page: 2,
+  });
+
+  assert.equal(afterArchive.totalCount, 12);
+  assert.equal(afterArchive.totalPages, 1);
+  assert.equal(afterArchive.page, 1);
+  assert.equal(afterArchive.products.length, 12);
 });

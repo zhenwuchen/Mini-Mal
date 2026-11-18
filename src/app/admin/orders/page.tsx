@@ -13,6 +13,8 @@ import { formatPrice } from "@/lib/catalog";
 import { getOrderStatusFilterOptions } from "@/lib/order-query-core";
 import { prisma } from "@/lib/prisma";
 
+export const instant = false;
+
 const orderService = createAdminOrderService({ prisma });
 
 const paymentStatusOptions = [
@@ -115,7 +117,8 @@ export default async function AdminOrdersPage({
         </div>
 
         {result.orders.length > 0 ? (
-          <div className="mt-4 overflow-x-auto border border-rule bg-paper">
+          <>
+          <div className="mt-4 hidden overflow-x-auto border border-rule bg-paper md:block">
             <table className="w-full min-w-[1020px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-rule bg-[#ece6dd]/75 text-[9px] tracking-[0.1em] text-muted">
@@ -183,6 +186,74 @@ export default async function AdminOrdersPage({
               </tbody>
             </table>
           </div>
+
+          <ul className="mt-4 divide-y divide-rule border border-rule bg-paper md:hidden">
+            {result.orders.map((order) => (
+              <li key={order.orderNumber} className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <Link
+                      href={`/admin/orders/${encodeURIComponent(order.orderNumber)}`}
+                      className="break-all text-xs font-medium text-ink transition-colors hover:text-earth"
+                    >
+                      {order.orderNumber}
+                    </Link>
+                    <p className="mt-2 break-words text-[11px] text-ink">
+                      {order.user.name ?? "未设置姓名"}
+                    </p>
+                    <p className="mt-1 break-all text-[9px] text-muted">
+                      {order.user.email}
+                    </p>
+                  </div>
+                  <p className="shrink-0 text-sm font-medium tabular-nums text-ink">
+                    {formatPrice(order.totalAmount)}
+                  </p>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3 border-t border-rule/70 pt-3">
+                  <div>
+                    <p className="text-[8px] tracking-[0.08em] text-muted">
+                      订单状态
+                    </p>
+                    <div className="mt-1.5">
+                      <OrderStatusBadge status={order.status} />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[8px] tracking-[0.08em] text-muted">
+                      支付状态
+                    </p>
+                    <div className="mt-1.5">
+                      <AdminPaymentStatusBadge
+                        status={order.paymentStatus}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-end justify-between gap-3 border-t border-rule/70 pt-3">
+                  <div>
+                    <p className="text-[9px] text-muted">
+                      {formatAdminDate(order.createdAt)}
+                    </p>
+                    <p className="mt-1 text-[9px] text-muted">
+                      支付时间{" "}
+                      {order.paidAt
+                        ? formatAdminDate(order.paidAt)
+                        : "—"}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/admin/orders/${encodeURIComponent(order.orderNumber)}`}
+                    className="inline-flex min-h-10 shrink-0 items-center border border-rule bg-paper px-3 text-[10px] font-medium text-ink transition-colors hover:border-ink"
+                  >
+                    查看详情
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+          </>
         ) : (
           <AdminEmptyState
             title="没有匹配订单"

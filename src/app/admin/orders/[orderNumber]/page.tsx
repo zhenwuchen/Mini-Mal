@@ -16,6 +16,8 @@ import { formatPrice } from "@/lib/catalog";
 import { getOrderItemImage } from "@/lib/order-query-core";
 import { prisma } from "@/lib/prisma";
 
+export const instant = false;
+
 const orderService = createAdminOrderService({ prisma });
 
 const flashMessages: Record<string, string> = {

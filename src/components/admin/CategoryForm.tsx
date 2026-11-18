@@ -1,6 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import {
+  cloneElement,
+  isValidElement,
+  useActionState,
+  type ReactElement,
+} from "react";
 
 import { saveCategoryAction } from "@/app/admin/actions";
 import { AdminSubmitButton } from "@/components/admin/AdminSubmitButton";
@@ -55,6 +60,7 @@ export function CategoryForm({
         <CategoryField
           id={`${idPrefix}-name`}
           label="分类名称"
+          required
           error={state.fieldErrors?.name}
         >
           <input
@@ -72,6 +78,7 @@ export function CategoryForm({
           id={`${idPrefix}-slug`}
           label="分类标识"
           hint="小写字母、数字和连字符"
+          required
           error={state.fieldErrors?.slug}
         >
           <input
@@ -122,6 +129,7 @@ function CategoryField({
   label,
   hint,
   error,
+  required = false,
   className = "",
   children,
 }: {
@@ -129,6 +137,7 @@ function CategoryField({
   label: string;
   hint?: string;
   error?: string;
+  required?: boolean;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -139,15 +148,51 @@ function CategoryField({
         className="block text-[11px] font-medium tracking-[0.08em] text-ink"
       >
         {label}
+        {required && (
+          <span
+            aria-hidden="true"
+            className="ml-2 align-middle text-[9px] font-normal tracking-[0.08em] text-[#8b3f32]"
+          >
+            必填
+          </span>
+        )}
       </label>
       {hint && (
         <p className="mt-1.5 text-[10px] leading-5 text-muted">{hint}</p>
       )}
-      <div className="mt-2">{children}</div>
+      <div className="mt-2">
+        {withFieldAria(children, id, Boolean(error))}
+      </div>
       {error && (
-        <p className="mt-2 text-xs leading-5 text-[#8b3f32]">{error}</p>
+        <p
+          id={`${id}-error`}
+          className="mt-2 text-xs leading-5 text-[#8b3f32]"
+        >
+          {error}
+        </p>
       )}
     </div>
+  );
+}
+
+function withFieldAria(
+  children: React.ReactNode,
+  id: string,
+  hasError: boolean,
+) {
+  if (!isValidElement(children)) {
+    return children;
+  }
+
+  return cloneElement(
+    children as ReactElement<{
+      "aria-describedby"?: string;
+      "aria-invalid"?: boolean;
+    }>,
+    {
+      "aria-describedby": hasError ? `${id}-error` : undefined,
+      "aria-invalid": hasError ? true : undefined,
+    },
   );
 }
 

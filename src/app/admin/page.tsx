@@ -7,6 +7,8 @@ import { createAdminOrderService } from "@/lib/admin-order-service";
 import { requireAdmin } from "@/lib/auth-session";
 import { prisma } from "@/lib/prisma";
 
+export const instant = false;
+
 const orderService = createAdminOrderService({ prisma });
 
 export default async function AdminDashboardPage() {

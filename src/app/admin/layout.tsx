@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { logoutAction } from "@/app/actions/auth";
+import { AdminFeedbackProvider } from "@/components/admin/AdminFeedback";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { SkipLink } from "@/components/SkipLink";
 import { requireAdmin } from "@/lib/auth-session";
@@ -25,7 +26,8 @@ export default async function AdminLayout({
   const user = await requireAdmin("/admin");
 
   return (
-    <div className="min-h-screen bg-[#f2eee7]">
+    <AdminFeedbackProvider>
+      <div className="min-h-screen bg-[#f2eee7]">
       <SkipLink />
       <aside className="bg-[#211d19] text-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:flex lg:w-[264px] lg:flex-col">
         <div className="mx-auto w-full max-w-[1440px] px-4 py-4 sm:px-6 lg:mx-0 lg:flex lg:h-full lg:max-w-none lg:flex-col lg:px-5 lg:py-7">
@@ -95,6 +97,7 @@ export default async function AdminLayout({
           {children}
         </div>
       </main>
-    </div>
+      </div>
+    </AdminFeedbackProvider>
   );
 }

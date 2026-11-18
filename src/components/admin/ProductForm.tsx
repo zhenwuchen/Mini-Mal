@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import {
+  cloneElement,
+  isValidElement,
+  useActionState,
+  type ReactElement,
+} from "react";
 
 import { saveProductAction } from "@/app/admin/actions";
 import { AdminSubmitButton } from "@/components/admin/AdminSubmitButton";
@@ -61,6 +66,7 @@ export function ProductForm({
           id="product-name"
           label="商品名称"
           hint="使用清晰、可识别的名称"
+          required
           error={state.fieldErrors?.name}
           className="lg:col-span-2"
         >
@@ -80,6 +86,7 @@ export function ProductForm({
           id="product-price"
           label="价格（元）"
           hint="人民币，最多两位小数"
+          required
           error={state.fieldErrors?.price}
         >
           <input
@@ -101,6 +108,7 @@ export function ProductForm({
           id="product-stock"
           label="库存"
           hint="非负整数"
+          required
           error={state.fieldErrors?.stock}
         >
           <input
@@ -120,6 +128,7 @@ export function ProductForm({
           id="product-category"
           label="所属分类"
           hint="分类必须已存在"
+          required
           error={state.fieldErrors?.categoryId}
         >
           <select
@@ -214,6 +223,7 @@ function FormField({
   label,
   hint,
   error,
+  required = false,
   className = "",
   children,
 }: {
@@ -221,6 +231,7 @@ function FormField({
   label: string;
   hint: string;
   error?: string;
+  required?: boolean;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -231,13 +242,49 @@ function FormField({
         className="block text-[11px] font-medium tracking-[0.08em] text-ink"
       >
         {label}
+        {required && (
+          <span
+            aria-hidden="true"
+            className="ml-2 align-middle text-[9px] font-normal tracking-[0.08em] text-[#8b3f32]"
+          >
+            必填
+          </span>
+        )}
       </label>
       <p className="mt-1.5 text-[10px] leading-5 text-muted">{hint}</p>
-      <div className="mt-2">{children}</div>
+      <div className="mt-2">
+        {withFieldAria(children, id, Boolean(error))}
+      </div>
       {error && (
-        <p className="mt-2 text-xs leading-5 text-[#8b3f32]">{error}</p>
+        <p
+          id={`${id}-error`}
+          className="mt-2 text-xs leading-5 text-[#8b3f32]"
+        >
+          {error}
+        </p>
       )}
     </div>
+  );
+}
+
+function withFieldAria(
+  children: React.ReactNode,
+  id: string,
+  hasError: boolean,
+) {
+  if (!isValidElement(children)) {
+    return children;
+  }
+
+  return cloneElement(
+    children as ReactElement<{
+      "aria-describedby"?: string;
+      "aria-invalid"?: boolean;
+    }>,
+    {
+      "aria-describedby": hasError ? `${id}-error` : undefined,
+      "aria-invalid": hasError ? true : undefined,
+    },
   );
 }
 

@@ -6,6 +6,8 @@ import { createAdminProductService } from "@/lib/admin-product-service";
 import { requireAdmin } from "@/lib/auth-session";
 import { prisma } from "@/lib/prisma";
 
+export const instant = false;
+
 const productService = createAdminProductService({ prisma });
 
 export default async function NewAdminProductPage() {

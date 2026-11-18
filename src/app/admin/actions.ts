@@ -113,7 +113,17 @@ export async function setProductActiveAction(
   }
 
   try {
-    await productService.setActive(productId, isActive);
+    const product = await productService.setActive(
+      productId,
+      isActive,
+    );
+
+    return {
+      status: "success",
+      message: isActive
+        ? `「${product.name}」已上架。`
+        : `「${product.name}」已下架，历史订单快照保持不变。`,
+    };
   } catch (error) {
     if (error instanceof AdminProductError) {
       return errorState(error.message);
@@ -122,13 +132,6 @@ export async function setProductActiveAction(
     return errorState("商品状态更新失败，请稍后重试。");
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/products");
-  revalidatePath("/products");
-  revalidatePath("/");
-  redirect(
-    `/admin/products?message=${isActive ? "activated" : "deactivated"}`,
-  );
 }
 
 export async function archiveProductAction(
@@ -143,7 +146,12 @@ export async function archiveProductAction(
   }
 
   try {
-    await productService.archive(productId);
+    const product = await productService.archive(productId);
+
+    return {
+      status: "success",
+      message: `「${product.name}」已归档并下架。历史订单快照已保留。`,
+    };
   } catch (error) {
     if (error instanceof AdminProductError) {
       return errorState(error.message);
@@ -152,11 +160,6 @@ export async function archiveProductAction(
     return errorState("商品删除失败，请稍后重试。");
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/products");
-  revalidatePath("/products");
-  revalidatePath("/");
-  redirect("/admin/products?message=archived");
 }
 
 export async function saveCategoryAction(
@@ -214,7 +217,12 @@ export async function deleteCategoryAction(
   }
 
   try {
-    await categoryService.delete(categoryId);
+    const category = await categoryService.delete(categoryId);
+
+    return {
+      status: "success",
+      message: `「${category.name}」已删除。`,
+    };
   } catch (error) {
     if (error instanceof AdminCategoryError) {
       return errorState(error.message);
@@ -223,12 +231,6 @@ export async function deleteCategoryAction(
     return errorState("分类删除失败，请稍后重试。");
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/categories");
-  revalidatePath("/admin/products");
-  revalidatePath("/products");
-  revalidatePath("/");
-  redirect("/admin/categories?message=deleted");
 }
 
 export async function cancelAdminOrderAction(
@@ -249,14 +251,17 @@ export async function cancelAdminOrderAction(
       orderNumber,
     });
 
-    revalidatePath("/admin");
-    revalidatePath("/admin/orders");
-    revalidatePath(
-      `/admin/orders/${encodeURIComponent(orderNumber)}`,
-    );
     outcome = result.alreadyCancelled
       ? "already-cancelled"
       : "cancelled";
+
+    return {
+      status: "success",
+      message:
+        outcome === "already-cancelled"
+          ? `订单 ${orderNumber} 此前已经取消，本次没有再次恢复库存。`
+          : `订单 ${orderNumber} 已取消，未完成支付已处理，库存已恢复。`,
+    };
   } catch (error) {
     if (error instanceof OrderCancelError) {
       return errorState(error.message);
@@ -265,7 +270,4 @@ export async function cancelAdminOrderAction(
     return errorState("订单取消失败，请稍后重试。");
   }
 
-  redirect(
-    `/admin/orders/${encodeURIComponent(orderNumber)}?message=${outcome}`,
-  );
 }

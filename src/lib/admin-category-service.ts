@@ -48,7 +48,10 @@ export type AdminCategoryService = {
     id: string,
     input: AdminCategoryInput,
   ): Promise<AdminCategorySummary>;
-  delete(id: string): Promise<void>;
+  delete(id: string): Promise<{
+    id: string;
+    name: string;
+  }>;
 };
 
 type AdminCategoryServiceDependencies = {
@@ -153,12 +156,17 @@ export function createAdminCategoryService({
     }
   }
 
-  async function deleteCategory(id: string): Promise<void> {
+  async function deleteCategory(id: string): Promise<{
+    id: string;
+    name: string;
+  }> {
     try {
-      await prisma.$transaction(async (transaction) => {
+      return await prisma.$transaction(async (transaction) => {
         const category = await transaction.category.findUnique({
           where: { id },
           select: {
+            id: true,
+            name: true,
             _count: {
               select: { products: true },
             },
@@ -176,6 +184,11 @@ export function createAdminCategoryService({
         await transaction.category.delete({
           where: { id },
         });
+
+        return {
+          id: category.id,
+          name: category.name,
+        };
       });
     } catch (error) {
       mapCategoryWriteError(error);

@@ -6,6 +6,9 @@ import {
   useState,
 } from "react";
 
+import { AdminConfirmDialog } from "@/components/admin/AdminConfirmDialog";
+import { AdminFeedbackProvider } from "@/components/admin/AdminFeedback";
+import { AdminMutationButton } from "@/components/admin/AdminMutationButton";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
 import { ProductCardLink } from "@/components/ProductCardLink";
 import { ProductDetailScrollReset } from "@/components/ProductDetailScrollReset";
@@ -146,6 +149,65 @@ function ScrollResetLifecycleFixture() {
   );
 }
 
+function AdminConfirmDialogFixture() {
+  const [open, setOpen] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+      >
+        归档示例商品
+      </button>
+      {confirmed && <p role="status">示例商品已归档</p>}
+      <AdminConfirmDialog
+        open={open}
+        title="归档并下架商品？"
+        description="这会停止商品销售，但不会物理删除数据，历史订单快照会完整保留。"
+        subject="示例商品"
+        confirmLabel="确认归档"
+        pendingLabel="归档中…"
+        pending={false}
+        onCancel={() => setOpen(false)}
+        onConfirm={() => {
+          setConfirmed(true);
+          setOpen(false);
+        }}
+      />
+    </div>
+  );
+}
+
+async function fixtureAdminMutationAction(): Promise<{
+  status: "success";
+  message: string;
+}> {
+  const probeWindow = window as Window & {
+    __adminMutationAttempts?: number;
+  };
+  probeWindow.__adminMutationAttempts =
+    (probeWindow.__adminMutationAttempts ?? 0) + 1;
+  await new Promise((resolve) => window.setTimeout(resolve, 500));
+
+  return {
+    status: "success",
+    message: "测试后台操作完成",
+  };
+}
+
+function AdminMutationButtonFixture() {
+  return (
+    <AdminMutationButton
+      action={fixtureAdminMutationAction}
+      fields={{}}
+      label="执行测试操作"
+      pendingLabel="执行中…"
+    />
+  );
+}
+
 export function UiTestHarness({ target }: { target: string }) {
   useEffect(() => {
     document.documentElement.dataset.uiTestReady = "true";
@@ -156,9 +218,10 @@ export function UiTestHarness({ target }: { target: string }) {
   }, []);
 
   return (
-    <main
-      className="mx-auto max-w-5xl space-y-12 px-6 py-12"
-    >
+    <AdminFeedbackProvider>
+      <main
+        className="mx-auto max-w-5xl space-y-12 px-6 py-12"
+      >
       {target === "scrolled" && (
         <ProductDetailScrollReset slug="integration-detail" />
       )}
@@ -251,11 +314,20 @@ export function UiTestHarness({ target }: { target: string }) {
         <ScrollResetLifecycleFixture />
       </section>
 
+      <section>
+        <h2>管理后台确认框集成测试</h2>
+        <AdminConfirmDialogFixture />
+        <div className="mt-6">
+          <AdminMutationButtonFixture />
+        </div>
+      </section>
+
       <div
         data-testid="scroll-tail"
         aria-hidden="true"
         style={{ height: "2600px" }}
       />
-    </main>
+      </main>
+    </AdminFeedbackProvider>
   );
 }

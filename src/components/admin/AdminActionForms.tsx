@@ -1,35 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
-
 import {
   archiveProductAction,
   cancelAdminOrderAction,
   deleteCategoryAction,
   setProductActiveAction,
 } from "@/app/admin/actions";
-import { AdminSubmitButton } from "@/components/admin/AdminSubmitButton";
-import {
-  initialAdminActionState,
-  type AdminActionState,
-} from "@/lib/admin-action-state";
-
-function ActionFeedback({ state }: { state: AdminActionState }) {
-  if (state.status === "idle" || !state.message) {
-    return null;
-  }
-
-  return (
-    <p
-      role={state.status === "error" ? "alert" : "status"}
-      className={`mt-3 text-xs leading-5 ${
-        state.status === "error" ? "text-[#8b3f32]" : "text-earth"
-      }`}
-    >
-      {state.message}
-    </p>
-  );
-}
+import { AdminMutationButton } from "@/components/admin/AdminMutationButton";
 
 export function ProductStatusForm({
   productId,
@@ -38,104 +15,75 @@ export function ProductStatusForm({
   productId: string;
   isActive: boolean;
 }) {
-  const [state, formAction] = useActionState(
-    setProductActiveAction,
-    initialAdminActionState,
-  );
-
   return (
-    <form action={formAction}>
-      <input type="hidden" name="productId" value={productId} />
-      <input
-        type="hidden"
-        name="isActive"
-        value={isActive ? "false" : "true"}
-      />
-      <AdminSubmitButton
-        label={isActive ? "下架" : "上架"}
-        pendingLabel="更新中…"
-        variant="quiet"
-      />
-      <ActionFeedback state={state} />
-    </form>
+    <AdminMutationButton
+      action={setProductActiveAction}
+      fields={{
+        productId,
+        isActive: isActive ? "false" : "true",
+      }}
+      label={isActive ? "下架" : "上架"}
+      pendingLabel="更新中…"
+      variant="quiet"
+    />
   );
 }
 
 export function ProductArchiveForm({
   productId,
+  productName,
 }: {
   productId: string;
+  productName: string;
 }) {
-  const [state, formAction] = useActionState(
-    archiveProductAction,
-    initialAdminActionState,
-  );
-
   return (
-    <form
-      action={formAction}
-      onSubmit={(event) => {
-        if (
-          !window.confirm(
-            "删除后会立即下架，并保留历史订单中的商品快照。确定继续吗？",
-          )
-        ) {
-          event.preventDefault();
-        }
+    <AdminMutationButton
+      action={archiveProductAction}
+      fields={{ productId }}
+      label="删除"
+      pendingLabel="归档中…"
+      variant="dangerQuiet"
+      confirmation={{
+        title: "归档并下架商品？",
+        description:
+          "这会立即停止商品销售，但不会物理删除记录。商品仍可在“已下架”筛选中查看，历史订单中的名称、价格和图片快照会完整保留。",
+        subject: productName,
+        confirmLabel: "确认归档",
       }}
-    >
-      <input type="hidden" name="productId" value={productId} />
-      <AdminSubmitButton
-        label="删除"
-        pendingLabel="删除中…"
-        variant="quiet"
-      />
-      <ActionFeedback state={state} />
-    </form>
+    />
   );
 }
 
 export function CategoryDeleteForm({
   categoryId,
+  categoryName,
   productCount,
 }: {
   categoryId: string;
+  categoryName: string;
   productCount: number;
 }) {
-  const [state, formAction] = useActionState(
-    deleteCategoryAction,
-    initialAdminActionState,
-  );
-
   return (
-    <form
-      action={formAction}
-      onSubmit={(event) => {
-        if (
-          !window.confirm(
-            "分类删除后无法恢复。确定删除这个空分类吗？",
-          )
-        ) {
-          event.preventDefault();
-        }
+    <AdminMutationButton
+      action={deleteCategoryAction}
+      fields={{ categoryId }}
+      label="删除分类"
+      pendingLabel="正在删除…"
+      variant="danger"
+      disabled={productCount > 0}
+      disabledReason={
+        productCount > 0
+          ? `该分类仍关联 ${productCount} 件商品。请先迁移商品；归档不会解除分类关联。`
+          : undefined
+      }
+      confirmation={{
+        title: "删除这个空分类？",
+        description:
+          "此操作会从数据库删除分类，且无法恢复。只有不再关联任何商品的分类可以被删除。",
+        subject: categoryName,
+        confirmLabel: "确认删除",
       }}
-    >
-      <input type="hidden" name="categoryId" value={categoryId} />
-      <AdminSubmitButton
-        label={
-          productCount > 0 ? "有商品，不能删除" : "删除分类"
-        }
-        pendingLabel="删除中…"
-        variant="danger"
-        disabled={productCount > 0}
-      />
-      {productCount > 0 && (
-        <p className="mt-2 max-w-[220px] text-[10px] leading-4 text-muted">
-          请先归档或迁移该分类下的 {productCount} 件商品。
-        </p>
-      )}
-      <ActionFeedback state={state} />
-    </form>
+    />
   );
 }
 
@@ -144,32 +92,21 @@ export function AdminCancelOrderForm({
 }: {
   orderNumber: string;
 }) {
-  const [state, formAction] = useActionState(
-    cancelAdminOrderAction,
-    initialAdminActionState,
-  );
-
   return (
-    <form
-      action={formAction}
-      onSubmit={(event) => {
-        if (
-          !window.confirm(
-            "取消待付款订单会同时取消未完成支付并恢复库存。确定继续吗？",
-          )
-        ) {
-          event.preventDefault();
-        }
+    <AdminMutationButton
+      action={cancelAdminOrderAction}
+      fields={{ orderNumber }}
+      label="取消待付款订单"
+      pendingLabel="正在取消…"
+      variant="danger"
+      fullWidth
+      confirmation={{
+        title: "取消这笔待付款订单？",
+        description:
+          "取消后会处理未完成支付，并按订单商品数量恢复库存。重复取消不会再次恢复库存。",
+        subject: orderNumber,
+        confirmLabel: "确认取消订单",
       }}
-    >
-      <input type="hidden" name="orderNumber" value={orderNumber} />
-      <AdminSubmitButton
-        label="取消待付款订单"
-        pendingLabel="正在取消…"
-        variant="danger"
-        fullWidth
-      />
-      <ActionFeedback state={state} />
-    </form>
+    />
   );
 }
