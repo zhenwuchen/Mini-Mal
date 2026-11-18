@@ -1,4 +1,4 @@
-# Mini Mall Production Deployment
+# Mini Mal1 Production Deployment
 
 This document describes the supported short-term production architecture:
 

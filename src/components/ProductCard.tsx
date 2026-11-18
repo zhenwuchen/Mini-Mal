@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { CatalogImage } from "@/components/CatalogImage";
-import { PlusIcon } from "@/components/Icons";
+import { QuickAddButton } from "@/components/QuickAddButton";
 import {
   formatPrice,
   type ProductCardData,
@@ -10,11 +10,13 @@ import {
 type ProductCardProps = {
   product: ProductCardData;
   href?: string;
+  loginHref?: string;
 };
 
 export function ProductCard({
   product,
   href = `/products/${product.slug}`,
+  loginHref = "/login?returnTo=%2Fproducts",
 }: ProductCardProps) {
   return (
     <article className="group">
@@ -38,14 +40,13 @@ export function ProductCard({
           </span>
         )}
 
-        <button
-          type="button"
-          aria-label={`将 ${product.name} 加入购物袋`}
-          className="absolute inset-x-0 bottom-0 z-20 flex translate-y-full items-center justify-center gap-2 border-t border-ink/10 bg-canvas/95 px-4 py-3.5 text-[9px] font-medium tracking-[0.16em] text-ink uppercase opacity-0 backdrop-blur-sm transition-[opacity,transform] duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100 max-lg:translate-y-0 max-lg:opacity-100"
-        >
-          <PlusIcon className="size-3.5" />
-          加入购物袋
-        </button>
+        <QuickAddButton
+          productId={product.id}
+          productName={product.name}
+          stock={product.stock}
+          isActive={product.isActive}
+          loginHref={loginHref}
+        />
       </div>
 
       <div className="pt-3.5 sm:pt-4">

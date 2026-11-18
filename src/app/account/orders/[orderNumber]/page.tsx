@@ -6,6 +6,7 @@ import { CatalogImage } from "@/components/CatalogImage";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { ArrowRightIcon } from "@/components/Icons";
+import { OrderPaymentPanel } from "@/components/orders/OrderPaymentPanel";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { SkipLink } from "@/components/SkipLink";
 import { requireUser } from "@/lib/auth-session";
@@ -30,11 +31,13 @@ export const metadata: Metadata = {
 
 export default async function OrderDetailPage({
   params,
+  searchParams,
 }: PageProps<"/account/orders/[orderNumber]">) {
   const { orderNumber } = await params;
   await requireUser(
     `/account/orders/${encodeURIComponent(orderNumber)}`,
   );
+  const query = await searchParams;
 
   let order: OrderDetail;
 
@@ -69,6 +72,22 @@ export default async function OrderDetailPage({
       <SkipLink />
       <Header />
       <main id="main-content">
+        {query.created === "1" && (
+          <p
+            role="status"
+            className="mx-auto mt-6 w-[calc(100%-2.5rem)] max-w-[1344px] border-l-2 border-earth bg-earth/6 px-4 py-3 text-sm text-ink sm:w-[calc(100%-4rem)]"
+          >
+            订单已创建。请核对支付截止时间后完成支付。
+          </p>
+        )}
+        {query.cancelled === "1" && (
+          <p
+            role="status"
+            className="mx-auto mt-6 w-[calc(100%-2.5rem)] max-w-[1344px] border-l-2 border-earth bg-earth/6 px-4 py-3 text-sm text-ink sm:w-[calc(100%-4rem)]"
+          >
+            订单已取消。库存恢复由取消事务完成，页面不会重复执行库存操作。
+          </p>
+        )}
         <section className="border-b border-rule/70">
           <div className="mx-auto w-full max-w-[1440px] px-5 pt-8 pb-10 sm:px-8 sm:pt-10 sm:pb-12 lg:px-12 lg:pt-12 xl:px-16">
             <nav
@@ -199,6 +218,7 @@ export default async function OrderDetailPage({
             </div>
 
             <aside className="space-y-8 lg:sticky lg:top-[104px]">
+              <OrderPaymentPanel order={order} />
               <OrderAmounts order={order} />
               <ShippingSnapshot order={order} />
             </aside>

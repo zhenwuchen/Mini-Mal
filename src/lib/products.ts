@@ -1,22 +1,17 @@
 import "server-only";
 
-import type { Category, Product } from "@prisma/client";
 import { cache } from "react";
 
 import {
-  buildProductOrderBy,
-  buildProductWhere,
-  deriveProductTag,
-  type CatalogCategory,
-  type CatalogProduct,
+  createProductCatalogService,
+  resolveCatalogImage,
+  toCatalogProduct,
+} from "@/lib/product-catalog-service";
+import {
   type ProductGalleryImage,
   type ProductSearch,
 } from "@/lib/product-catalog";
 import { prisma } from "@/lib/prisma";
-
-type ProductWithCategory = Product & {
-  category: Category;
-};
 
 const categoryImageBySlug: Record<string, string> = {
   electronics: "/images/categories/electronics.jpg",
@@ -25,65 +20,10 @@ const categoryImageBySlug: Record<string, string> = {
   beauty: "/images/categories/beauty.jpg",
 };
 
-function resolveProductImage(
-  imageUrl: string | null,
-  categorySlug: string,
-): string {
-  return (
-    imageUrl ??
-    categoryImageBySlug[categorySlug] ??
-    "/images/categories/home-living.jpg"
-  );
-}
-
-function toCatalogProduct(product: ProductWithCategory): CatalogProduct {
-  const image = resolveProductImage(product.imageUrl, product.category.slug);
-
-  return {
-    id: product.id,
-    name: product.name,
-    slug: product.slug,
-    price: product.price,
-    image,
-    imageIsFallback: !product.imageUrl,
-    category: product.category.name,
-    categorySlug: product.category.slug,
-    description: product.description,
-    stock: product.stock,
-    isActive: product.isActive,
-    tag: deriveProductTag(product.stock),
-  };
-}
+const productCatalogService = createProductCatalogService({ prisma });
 
 export async function getCatalogPageData(search: ProductSearch) {
-  const where = buildProductWhere(search);
-  const orderBy = buildProductOrderBy(search.sort);
-
-  const [categories, totalCount, products] = await prisma.$transaction([
-    prisma.category.findMany({
-      orderBy: { name: "asc" },
-    }),
-    prisma.product.count({
-      where: { isActive: true },
-    }),
-    prisma.product.findMany({
-      where,
-      orderBy,
-      include: { category: true },
-    }),
-  ]);
-
-  return {
-    categories: categories.map<CatalogCategory>((category) => ({
-      id: category.id,
-      name: category.name,
-      slug: category.slug,
-      description: category.description,
-    })),
-    totalCount,
-    filteredCount: products.length,
-    products: products.map(toCatalogProduct),
-  };
+  return productCatalogService.getCatalogPageData(search);
 }
 
 export async function getHomepageProductData() {
@@ -131,9 +71,10 @@ export async function getProductDetail(slug: string) {
   });
 
   const catalogProduct = toCatalogProduct(product);
-  const categoryImage =
-    categoryImageBySlug[product.category.slug] ??
-    "/images/categories/home-living.jpg";
+  const categoryImage = resolveCatalogImage(
+    categoryImageBySlug[product.category.slug] ?? null,
+    product.category.slug,
+  );
 
   const galleryCandidates: ProductGalleryImage[] = [
     {

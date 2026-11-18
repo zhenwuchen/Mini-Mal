@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type FormEvent,
+} from "react";
 
 import { logoutAction } from "@/app/actions/auth";
 import {
@@ -16,6 +23,10 @@ import {
   formatCartBadgeQuantity,
   getCartAriaLabel,
 } from "@/lib/header-cart";
+import {
+  buildHeaderSearchHref,
+  normalizeHeaderSearchQuery,
+} from "@/lib/header-search";
 
 const navItems = [
   { label: "首页", href: "/" },
@@ -41,9 +52,15 @@ export function HeaderClient({
   cartQuantity,
   sessionPending = false,
 }: HeaderClientProps) {
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchPending, startSearchTransition] = useTransition();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const cartBadge = formatCartBadgeQuantity(cartQuantity);
 
   useEffect(() => {
@@ -65,6 +82,55 @@ export function HeaderClient({
       menuButton?.focus();
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const searchButton = searchButtonRef.current;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSearchOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    searchInputRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+      searchButton?.focus();
+    };
+  }, [searchOpen]);
+
+  function openSearch() {
+    setMenuOpen(false);
+    setSearchOpen(true);
+  }
+
+  function closeSearch() {
+    setSearchOpen(false);
+  }
+
+  function submitSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const query = normalizeHeaderSearchQuery(searchQuery);
+    setSearchQuery(query);
+    setSearchOpen(false);
+
+    startSearchTransition(() => {
+      router.push(buildHeaderSearchHref(query));
+    });
+  }
+
+  function clearSearch() {
+    setSearchQuery("");
+    setSearchOpen(false);
+
+    startSearchTransition(() => {
+      router.push(buildHeaderSearchHref(""));
+    });
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-rule/70 bg-canvas/85 backdrop-blur-xl">
@@ -94,8 +160,12 @@ export function HeaderClient({
 
         <div className="flex items-center justify-self-end gap-1 sm:gap-1.5">
           <button
+            ref={searchButtonRef}
             type="button"
             aria-label="搜索商品"
+            aria-expanded={searchOpen}
+            aria-controls="header-search"
+            onClick={openSearch}
             className="grid size-9 place-items-center text-ink transition-colors hover:text-earth sm:size-10"
           >
             <SearchIcon className="size-[18px]" />
@@ -179,6 +249,79 @@ export function HeaderClient({
         </div>
       </div>
 
+      {searchOpen && (
+        <div
+          id="header-search"
+          role="dialog"
+          aria-modal="true"
+          aria-label="搜索商品"
+          className="fixed inset-0 z-[65] bg-ink/22 pt-16 backdrop-blur-[2px] md:pt-[72px]"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeSearch();
+          }}
+        >
+          <div className="border-b border-rule bg-canvas px-5 py-5 shadow-[0_18px_50px_rgba(32,27,23,0.08)] sm:px-8 lg:px-12 xl:px-16">
+            <form
+              role="search"
+              onSubmit={submitSearch}
+              className="mx-auto flex w-full max-w-[1440px] items-end gap-4"
+            >
+              <div className="min-w-0 flex-1">
+                <label
+                  htmlFor="header-search-input"
+                  className="mb-2 block text-[10px] font-medium tracking-[0.16em] text-muted uppercase"
+                >
+                  搜索商品
+                </label>
+                <div className="flex items-center border-b border-ink pb-3 focus-within:border-earth">
+                  <SearchIcon className="mr-3 size-5 shrink-0 text-muted" />
+                  <input
+                    ref={searchInputRef}
+                    id="header-search-input"
+                    name="search"
+                    type="search"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="输入商品名称，按回车搜索"
+                    autoComplete="off"
+                    maxLength={80}
+                    className="min-w-0 flex-1 bg-transparent text-lg text-ink outline-none placeholder:text-muted/55 sm:text-2xl"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={clearSearch}
+                      disabled={searchPending}
+                      className="ml-3 min-h-9 border-b border-transparent px-1 text-[10px] font-medium tracking-[0.08em] text-muted transition-colors hover:border-ink hover:text-ink disabled:cursor-wait"
+                    >
+                      清空并查看全部
+                    </button>
+                  )}
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={searchPending}
+                className="min-h-11 bg-ink px-5 text-[10px] font-medium tracking-[0.12em] text-white uppercase transition-colors hover:bg-earth disabled:cursor-wait disabled:bg-muted"
+              >
+                {searchPending ? "搜索中…" : "搜索"}
+              </button>
+              <button
+                type="button"
+                aria-label="关闭搜索"
+                onClick={closeSearch}
+                className="grid size-11 shrink-0 place-items-center text-ink transition-colors hover:text-earth"
+              >
+                <CloseIcon className="size-5" />
+              </button>
+            </form>
+            <p className="mx-auto mt-3 w-full max-w-[1440px] text-[10px] text-muted">
+              搜索后可在商品列表继续按分类、价格排序和页码浏览。
+            </p>
+          </div>
+        </div>
+      )}
+
       {menuOpen && (
         <div
           id="mobile-navigation"
@@ -223,7 +366,11 @@ export function HeaderClient({
           </nav>
 
           <div className="mt-auto flex items-center gap-6 border-t border-rule pt-6 text-sm text-muted">
-            <button type="button" className="inline-flex items-center gap-2">
+            <button
+              type="button"
+              onClick={openSearch}
+              className="inline-flex items-center gap-2"
+            >
               <SearchIcon className="size-[18px]" />
               搜索
             </button>

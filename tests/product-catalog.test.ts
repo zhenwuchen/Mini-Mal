@@ -20,6 +20,7 @@ test("normalizes URL search params for the product catalog", () => {
       q: "耳机",
       category: "electronics",
       sort: "price-desc",
+      page: 1,
     },
   );
 });
@@ -35,6 +36,7 @@ test("supports the latest-product sort from URL search params", () => {
       q: "台灯",
       category: "home-living",
       sort: "newest",
+      page: 1,
     },
   );
 });
@@ -54,13 +56,19 @@ test("falls back to featured sorting for unsupported sort values", () => {
       q: "",
       category: "",
       sort: "featured",
+      page: 1,
     },
   );
 });
 
 test("builds active product filters from search and category", () => {
   assert.deepEqual(
-    buildProductWhere({ q: "杯", category: "home-living", sort: "featured" }),
+    buildProductWhere({
+      q: "杯",
+      category: "home-living",
+      sort: "featured",
+      page: 1,
+    }),
     {
       isActive: true,
       name: { contains: "杯" },
@@ -71,7 +79,12 @@ test("builds active product filters from search and category", () => {
 
 test("omits empty product filters", () => {
   assert.deepEqual(
-    buildProductWhere({ q: "", category: "", sort: "featured" }),
+    buildProductWhere({
+      q: "",
+      category: "",
+      sort: "featured",
+      page: 1,
+    }),
     { isActive: true },
   );
 });

@@ -1,5 +1,5 @@
 [Unit]
-Description=Mini Mall Next.js application
+Description=Mini Mal1 Next.js application
 After=network-online.target
 Wants=network-online.target
 

@@ -7,7 +7,12 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { ProductCard } from "@/components/ProductCard";
 import { SkipLink } from "@/components/SkipLink";
-import { normalizeProductSearchParams } from "@/lib/product-catalog";
+import {
+  buildCatalogPageHref,
+  normalizeProductSearchParams,
+  type ProductSearch,
+} from "@/lib/product-catalog";
+import { buildLoginHref } from "@/lib/cart-action";
 import { getCatalogPageData } from "@/lib/products";
 
 export const metadata: Metadata = {
@@ -65,9 +70,12 @@ export default function ProductsPage({
 async function CatalogContent({
   searchParams,
 }: Pick<PageProps<"/products">, "searchParams">) {
-  const search = normalizeProductSearchParams(await searchParams);
+  const rawSearchParams = await searchParams;
+  const search = normalizeProductSearchParams(rawSearchParams);
   const data = await getCatalogPageData(search);
   const hasFilters = Boolean(search.q || search.category);
+  const catalogHref = buildCatalogPageHref(search, data.page);
+  const loginHref = buildLoginHref(catalogHref);
 
   return (
     <>
@@ -77,15 +85,21 @@ async function CatalogContent({
         search={search.q}
         category={search.category}
         sort={search.sort}
+        focusOnMount={rawSearchParams.focus === "search"}
       />
 
       <div className="mt-8 flex flex-col gap-3 border-b border-rule/70 pb-4 sm:mt-10 sm:flex-row sm:items-end sm:justify-between">
         <p role="status" className="text-sm text-ink">
           共 {data.filteredCount} 件商品
         </p>
-        <p className="text-[10px] tracking-[0.12em] text-muted">
-          {hasFilters ? "筛选结果" : "已上架商品"}
-        </p>
+        <div className="flex items-center gap-4 text-[10px] tracking-[0.12em] text-muted">
+          <span>{hasFilters ? "筛选结果" : "已上架商品"}</span>
+          {data.totalPages > 0 && (
+            <span className="tabular-nums">
+              第 {data.page} / {data.totalPages} 页
+            </span>
+          )}
+        </div>
       </div>
 
       {data.products.length > 0 ? (
@@ -94,7 +108,11 @@ async function CatalogContent({
           className="mt-8 grid grid-cols-2 gap-x-3 gap-y-10 sm:mt-10 sm:gap-x-4 sm:gap-y-14 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-5"
         >
           {data.products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              loginHref={loginHref}
+            />
           ))}
         </div>
       ) : (
@@ -118,8 +136,134 @@ async function CatalogContent({
           </Link>
         </div>
       )}
+
+      {data.totalPages > 1 && (
+        <CatalogPagination
+          search={search}
+          currentPage={data.page}
+          totalPages={data.totalPages}
+        />
+      )}
     </>
   );
+}
+
+function CatalogPagination({
+  search,
+  currentPage,
+  totalPages,
+}: {
+  search: ProductSearch;
+  currentPage: number;
+  totalPages: number;
+}) {
+  const pageItems = getPageItems(currentPage, totalPages);
+
+  return (
+    <nav
+      aria-label="商品分页"
+      className="mt-12 flex flex-col gap-4 border-t border-rule/80 pt-6 sm:mt-16 sm:flex-row sm:items-center sm:justify-between"
+    >
+      {currentPage > 1 ? (
+        <Link
+          href={buildCatalogPageHref(search, currentPage - 1)}
+          rel="prev"
+          className={paginationButtonClass}
+        >
+          上一页
+        </Link>
+      ) : (
+        <span aria-hidden="true" />
+      )}
+
+      <ol className="flex flex-wrap items-center justify-center gap-1.5">
+        {pageItems.map((item, index) =>
+          item === "ellipsis" ? (
+            <li
+              key={`ellipsis-${index}`}
+              aria-hidden="true"
+              className="grid min-h-10 min-w-8 place-items-center text-muted"
+            >
+              …
+            </li>
+          ) : (
+            <li key={item}>
+              <Link
+                href={buildCatalogPageHref(search, item)}
+                aria-current={item === currentPage ? "page" : undefined}
+                aria-label={`第 ${item} 页`}
+                className={`grid min-h-10 min-w-10 place-items-center border px-3 text-[11px] tabular-nums transition-colors ${
+                  item === currentPage
+                    ? "border-ink bg-ink text-white"
+                    : "border-rule bg-paper text-ink hover:border-ink"
+                }`}
+              >
+                {item}
+              </Link>
+            </li>
+          ),
+        )}
+      </ol>
+
+      {currentPage < totalPages ? (
+        <Link
+          href={buildCatalogPageHref(search, currentPage + 1)}
+          rel="next"
+          className={paginationButtonClass}
+        >
+          下一页
+        </Link>
+      ) : (
+        <span aria-hidden="true" />
+      )}
+    </nav>
+  );
+}
+
+const paginationButtonClass =
+  "inline-flex min-h-10 items-center justify-center border border-rule bg-paper px-4 text-[10px] font-medium tracking-[0.1em] text-ink transition-colors hover:border-ink";
+
+function getPageItems(
+  currentPage: number,
+  totalPages: number,
+): Array<number | "ellipsis"> {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  const pages = new Set([
+    1,
+    totalPages,
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+  ]);
+
+  if (currentPage <= 3) {
+    pages.add(2);
+    pages.add(3);
+    pages.add(4);
+  }
+  if (currentPage >= totalPages - 2) {
+    pages.add(totalPages - 1);
+    pages.add(totalPages - 2);
+    pages.add(totalPages - 3);
+  }
+
+  const ordered = [...pages]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((left, right) => left - right);
+  const items: Array<number | "ellipsis"> = [];
+
+  ordered.forEach((page, index) => {
+    const previous = ordered[index - 1];
+    if (previous && page - previous > 1) {
+      items.push("ellipsis");
+    }
+    items.push(page);
+  });
+
+  return items;
 }
 
 function CatalogPageSkeleton() {

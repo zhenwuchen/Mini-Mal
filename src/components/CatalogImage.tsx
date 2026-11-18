@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useState } from "react";
 
+import { normalizeLocalImagePath } from "@/lib/image-path";
+
 type CatalogImageProps = {
   src: string;
   alt: string;
@@ -21,6 +23,10 @@ export function CatalogImage({
   preload = false,
 }: CatalogImageProps) {
   const [failed, setFailed] = useState(false);
+  const safeSrc = normalizeLocalImagePath(
+    src,
+    "/images/categories/home-living.jpg",
+  );
 
   if (failed) {
     return (
@@ -36,7 +42,7 @@ export function CatalogImage({
 
   return (
     <Image
-      src={src}
+      src={safeSrc}
       alt={alt}
       fill
       sizes={sizes}

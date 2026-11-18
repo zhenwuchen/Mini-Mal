@@ -1,8 +1,10 @@
 
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
+const adminPasswordPlaceholder =
+    "replace-with-at-least-12-characters";
 
 // 1. 商品分类
 const categories = [
@@ -227,27 +229,54 @@ async function main() {
     const password = process.env.ADMIN_PASSWORD;
     const name = process.env.ADMIN_NAME || "Mini Mal1 Admin";
 
-    if (!email || !password || password.length < 12) {
+    if (
+        !email ||
+        !password ||
+        password.length < 12 ||
+        password === adminPasswordPlaceholder
+    ) {
         throw new Error(
-            "请在 .env 中配置 ADMIN_EMAIL 和至少 12 位的 ADMIN_PASSWORD"
+            "请在 .env 中配置 ADMIN_EMAIL 和非示例值、至少 12 位的 ADMIN_PASSWORD"
         );
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    await prisma.user.upsert({
-        where: { email },
-        update: {
-            name,
-            role: "ADMIN",
-        },
-        create: {
-            name,
-            email,
-            passwordHash,
-            role: "ADMIN",
-        },
-    });
+    try {
+        await prisma.user.create({
+            data: {
+                name,
+                email,
+                passwordHash,
+                role: "ADMIN",
+            },
+        });
+    } catch (error) {
+        if (
+            !(
+                error instanceof Prisma.PrismaClientKnownRequestError &&
+                error.code === "P2002"
+            )
+        ) {
+            throw error;
+        }
+
+        const updated = await prisma.user.updateMany({
+            where: {
+                email,
+                role: "ADMIN",
+            },
+            data: {
+                name,
+            },
+        });
+
+        if (updated.count !== 1) {
+            throw new Error(
+                "ADMIN_EMAIL 已属于普通用户；Seed 不会提升既有用户权限"
+            );
+        }
+    }
 
     console.log("管理员初始化完成");
 

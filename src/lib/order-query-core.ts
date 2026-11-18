@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 
+import { normalizeLocalImagePath } from "@/lib/image-path";
 import {
   getOrderStatusPresentation,
   isOrderStatus,
@@ -18,6 +19,35 @@ export const ORDER_LIST_MAX_PAGE_SIZE = 20;
 export const ORDER_LIST_MAX_PAGE = 1_000_000;
 export const orderFallbackImage =
   "/images/categories/home-living.jpg";
+
+export type OrderPaymentView = {
+  id: string;
+  status: string;
+  amount: number;
+  currency: string;
+  failureCode: string | null;
+  failureReason: string | null;
+  createdAt: Date;
+  paidAt: Date | null;
+};
+
+type OrderPaymentViewSource = {
+  id: string;
+  status: string;
+  amount: number;
+  currency: string;
+  failureCode: string | null;
+  failureReason: string | null;
+  createdAt: Date;
+  paidAt: Date | null;
+  [key: string]: unknown;
+};
+
+const safePaymentFailureReasons: Record<string, string> = {
+  MOCK_USER_DECLINED: "模拟支付被用户拒绝",
+  MOCK_PAYMENT_TIMEOUT: "模拟支付超时",
+  MOCK_PAYMENT_FAILED: "模拟支付失败，请稍后重试",
+};
 
 type RawSearchParams = Record<
   string,
@@ -131,7 +161,26 @@ export function getOrderItemImage(
   imageUrl: string | null | undefined,
 ): string {
   const normalized = imageUrl?.trim();
-  return normalized || orderFallbackImage;
+  return normalizeLocalImagePath(normalized, orderFallbackImage);
+}
+
+export function toOrderPaymentView(
+  payment: OrderPaymentViewSource,
+): OrderPaymentView {
+  const failureReason = payment.failureCode
+    ? safePaymentFailureReasons[payment.failureCode] ?? null
+    : null;
+
+  return {
+    id: payment.id,
+    status: payment.status,
+    amount: payment.amount,
+    currency: payment.currency,
+    failureCode: payment.failureCode,
+    failureReason,
+    createdAt: payment.createdAt,
+    paidAt: payment.paidAt,
+  };
 }
 
 export function normalizeOrderNumber(

@@ -12,6 +12,7 @@ export type ProductSearch = {
   q: string;
   category: string;
   sort: ProductSort;
+  page: number;
 };
 
 export type CatalogCategory = {
@@ -44,8 +45,22 @@ export type ProductGalleryImage = {
 
 type RawSearchParams = Record<string, string | string[] | undefined>;
 
+export const CATALOG_PAGE_SIZE = 12;
+export const CATALOG_SEARCH_MAX_LENGTH = 80;
+
 const firstValue = (value: string | string[] | undefined) =>
   Array.isArray(value) ? value[0] : value;
+
+function normalizePage(value: string | string[] | undefined): number {
+  const pageText = firstValue(value)?.trim() ?? "";
+  const page = Number(pageText);
+
+  return /^[1-9]\d*$/.test(pageText) &&
+    Number.isSafeInteger(page) &&
+    page > 0
+    ? page
+    : 1;
+}
 
 export function normalizeProductSearchParams(
   params: RawSearchParams,
@@ -61,9 +76,14 @@ export function normalizeProductSearchParams(
   const legacySearch = firstValue(params.q);
 
   return {
-    q: (search ?? legacySearch)?.trim() ?? "",
-    category: firstValue(params.category)?.trim() ?? "",
+    q: ((search ?? legacySearch)?.trim() ?? "").slice(
+      0,
+      CATALOG_SEARCH_MAX_LENGTH,
+    ),
+    category:
+      firstValue(params.category)?.trim().slice(0, 128) ?? "",
     sort,
+    page: normalizePage(params.page),
   };
 }
 
@@ -73,9 +93,20 @@ export function updateCatalogSearchParams(
     search: string;
     category: string;
     sort: ProductSort;
+    page: number;
   }>,
 ): URLSearchParams {
   const params = new URLSearchParams(current);
+  const resetsPage =
+    "search" in changes ||
+    "category" in changes ||
+    "sort" in changes;
+
+  if (resetsPage) {
+    params.delete("page");
+  }
+
+  params.delete("focus");
 
   if ("search" in changes) {
     params.delete("q");
@@ -106,7 +137,38 @@ export function updateCatalogSearchParams(
     }
   }
 
+  if ("page" in changes) {
+    const page = changes.page;
+
+    if (
+      typeof page === "number" &&
+      Number.isSafeInteger(page) &&
+      page > 1
+    ) {
+      params.set("page", String(page));
+    } else {
+      params.delete("page");
+    }
+  }
+
   return params;
+}
+
+export function buildCatalogPageHref(
+  search: ProductSearch,
+  page: number,
+): string {
+  const params = new URLSearchParams();
+
+  if (search.q) params.set("search", search.q);
+  if (search.category) params.set("category", search.category);
+  if (search.sort !== "featured") params.set("sort", search.sort);
+  if (Number.isSafeInteger(page) && page > 1) {
+    params.set("page", String(page));
+  }
+
+  const query = params.toString();
+  return query ? `/products?${query}` : "/products";
 }
 
 export function buildProductWhere(

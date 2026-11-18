@@ -149,13 +149,12 @@ function CartContent({
             </strong>
           </div>
 
-          <button
-            type="button"
-            disabled
-            className="mt-7 min-h-13 w-full cursor-not-allowed bg-ink px-5 py-4 text-[10px] font-medium tracking-[0.16em] text-white/80 uppercase"
+          <Link
+            href="/checkout"
+            className="mt-7 flex min-h-13 w-full items-center justify-center bg-ink px-5 py-4 text-[10px] font-medium tracking-[0.16em] text-white uppercase transition-colors hover:bg-earth"
           >
-            结算功能即将开放
-          </button>
+            前往结算
+          </Link>
           <p className="mt-4 text-[11px] leading-5 text-muted">
             当前金额仅包含商品价格，不计算优惠券、运费或税费。
           </p>

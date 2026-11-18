@@ -126,6 +126,32 @@ async function loadMigrations(
   }
 }
 
+async function resetSharedTestDatabase(prisma: PrismaClient) {
+  await prisma.$executeRawUnsafe("PRAGMA foreign_keys = OFF");
+
+  try {
+    const tables = await prisma.$queryRawUnsafe<
+      Array<{ name: string }>
+    >(`
+      SELECT "name"
+      FROM "sqlite_master"
+      WHERE "type" = 'table'
+        AND "name" NOT LIKE 'sqlite_%'
+        AND "name" <> '_prisma_migrations'
+      ORDER BY "name"
+    `);
+
+    for (const { name } of tables) {
+      const quotedName = `"${name.replaceAll('"', '""')}"`;
+      await prisma.$executeRawUnsafe(
+        `DELETE FROM ${quotedName}`,
+      );
+    }
+  } finally {
+    await prisma.$executeRawUnsafe("PRAGMA foreign_keys = ON");
+  }
+}
+
 function assertSafeTemporaryDirectory(
   directory: string,
   expectedPrefix: string,
@@ -141,6 +167,39 @@ function assertSafeTemporaryDirectory(
   }
 }
 
+function getSharedTestDatabaseUrl(): string | null {
+  const runId = process.env.MINI_MALL_TEST_RUN_ID;
+
+  if (!runId) {
+    return null;
+  }
+
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl?.startsWith("file:")) {
+    throw new Error(
+      "The shared test runner must provide a SQLite DATABASE_URL",
+    );
+  }
+
+  const databasePath = resolve(
+    decodeURIComponent(databaseUrl.slice("file:".length)),
+  );
+  const temporaryRoot = `${resolve(tmpdir())}${sep}`;
+
+  if (
+    !databasePath.startsWith(temporaryRoot) ||
+    !basename(databasePath).endsWith(`${runId}.db`) ||
+    /prisma[\\/]dev\.db$/i.test(databasePath)
+  ) {
+    throw new Error(
+      "Refusing to use an unsafe shared test database URL",
+    );
+  }
+
+  return databaseUrl;
+}
+
 function createIsolatedTestDatabase({
   directoryPrefix,
   databaseFileName,
@@ -148,11 +207,16 @@ function createIsolatedTestDatabase({
   directoryPrefix: string;
   databaseFileName: string;
 }): TestDatabase {
-  const temporaryDirectory = mkdtempSync(
-    join(tmpdir(), directoryPrefix),
-  );
-  const databasePath = join(temporaryDirectory, databaseFileName);
-  const databaseUrl = `file:${databasePath.replaceAll("\\", "/")}`;
+  const sharedDatabaseUrl = getSharedTestDatabaseUrl();
+  const temporaryDirectory = sharedDatabaseUrl
+    ? null
+    : mkdtempSync(join(tmpdir(), directoryPrefix));
+  const databasePath = temporaryDirectory
+    ? join(temporaryDirectory, databaseFileName)
+    : null;
+  const databaseUrl =
+    sharedDatabaseUrl ??
+    `file:${databasePath?.replaceAll("\\", "/")}`;
   const projectRoot = process.cwd();
   const prisma = new PrismaClient({
     datasources: {
@@ -169,11 +233,17 @@ function createIsolatedTestDatabase({
 
     cleaned = true;
     await prisma.$disconnect();
-    assertSafeTemporaryDirectory(temporaryDirectory, directoryPrefix);
-    rmSync(temporaryDirectory, {
-      recursive: true,
-      force: true,
-    });
+
+    if (temporaryDirectory) {
+      assertSafeTemporaryDirectory(
+        temporaryDirectory,
+        directoryPrefix,
+      );
+      rmSync(temporaryDirectory, {
+        recursive: true,
+        force: true,
+      });
+    }
   }
 
   async function initialize() {
@@ -182,10 +252,15 @@ function createIsolatedTestDatabase({
     }
 
     try {
-      await loadMigrations(
-        prisma,
-        join(projectRoot, "prisma", "migrations"),
-      );
+      if (sharedDatabaseUrl) {
+        await resetSharedTestDatabase(prisma);
+      } else {
+        await loadMigrations(
+          prisma,
+          join(projectRoot, "prisma", "migrations"),
+        );
+      }
+
       initialized = true;
     } catch (error) {
       await cleanup();
@@ -226,5 +301,26 @@ export function createIsolatedOrderExpirationTestDatabase(): TestDatabase {
   return createIsolatedTestDatabase({
     directoryPrefix: "mini-mall-order-expiration-",
     databaseFileName: "order-expiration-test.db",
+  });
+}
+
+export function createIsolatedAdminTestDatabase(): TestDatabase {
+  return createIsolatedTestDatabase({
+    directoryPrefix: "mini-mall-admin-",
+    databaseFileName: "admin-test.db",
+  });
+}
+
+export function createIsolatedStorefrontTestDatabase(): TestDatabase {
+  return createIsolatedTestDatabase({
+    directoryPrefix: "mini-mall-storefront-",
+    databaseFileName: "storefront-test.db",
+  });
+}
+
+export function createIsolatedProfileTestDatabase(): TestDatabase {
+  return createIsolatedTestDatabase({
+    directoryPrefix: "mini-mall-profile-",
+    databaseFileName: "profile-test.db",
   });
 }

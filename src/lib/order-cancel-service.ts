@@ -68,6 +68,9 @@ export type OrderCancelResult = {
 
 export type OrderCancelService = {
   cancelOrder(input: CancelOrderInput): Promise<OrderCancelResult>;
+  cancelOrderAsAdmin(
+    input: CancelOrderInput,
+  ): Promise<OrderCancelResult>;
 };
 
 type OrderCancelServiceDependencies = {
@@ -251,11 +254,11 @@ export function createOrderCancelService({
     throw new OrderCancelError("ORDER_CANCEL_BUSY");
   }
 
-  async function cancelOrder(
+  async function cancelByOrderNumber(
     input: CancelOrderInput,
+    scopedUserId: string | null,
   ): Promise<OrderCancelResult> {
     try {
-      const userId = await requireCurrentUserId();
       const candidate =
         input && typeof input === "object"
           ? (input as unknown as Record<string, unknown>)
@@ -265,10 +268,10 @@ export function createOrderCancelService({
       );
 
       return await runWriteTransaction(async (transaction) => {
-        const ownedOrder = await transaction.order.findFirst({
+        const order = await transaction.order.findFirst({
           where: {
             orderNumber,
-            userId,
+            ...(scopedUserId ? { userId: scopedUserId } : {}),
           },
           select: {
             id: true,
@@ -278,7 +281,11 @@ export function createOrderCancelService({
           },
         });
 
-        if (!ownedOrder) {
+        if (!order) {
+          if (!scopedUserId) {
+            throw new OrderCancelError("ORDER_NOT_FOUND");
+          }
+
           const existingOrder = await transaction.order.findUnique({
             where: { orderNumber },
             select: { id: true },
@@ -291,19 +298,19 @@ export function createOrderCancelService({
           );
         }
 
-        if (ownedOrder.status === ORDER_STATUS.CANCELLED) {
-          return toAlreadyCancelledResult(ownedOrder);
+        if (order.status === ORDER_STATUS.CANCELLED) {
+          return toAlreadyCancelledResult(order);
         }
 
-        if (ownedOrder.status !== ORDER_STATUS.PENDING_PAYMENT) {
+        if (order.status !== ORDER_STATUS.PENDING_PAYMENT) {
           throw new OrderCancelError("ORDER_NOT_CANCELLABLE");
         }
 
         const cancelledAt = now();
         const statusUpdate = await transaction.order.updateMany({
           where: {
-            id: ownedOrder.id,
-            userId,
+            id: order.id,
+            ...(scopedUserId ? { userId: scopedUserId } : {}),
             status: ORDER_STATUS.PENDING_PAYMENT,
             cancelledAt: null,
           },
@@ -316,8 +323,8 @@ export function createOrderCancelService({
         if (statusUpdate.count !== 1) {
           const currentOrder = await transaction.order.findFirst({
             where: {
-              id: ownedOrder.id,
-              userId,
+              id: order.id,
+              ...(scopedUserId ? { userId: scopedUserId } : {}),
             },
             select: {
               orderNumber: true,
@@ -340,7 +347,7 @@ export function createOrderCancelService({
         const successfulPayments =
           await findSuccessfulPaymentsForOrder(
             transaction,
-            ownedOrder.id,
+            order.id,
           );
 
         if (successfulPayments.length > 0) {
@@ -352,15 +359,15 @@ export function createOrderCancelService({
         const cancelledPaymentCount =
           await cancelPendingPaymentsForOrder(
             transaction,
-            ownedOrder.id,
+            order.id,
           );
         const restoredItemCount = await restoreOrderItems(
           transaction,
-          ownedOrder.id,
+          order.id,
         );
 
         return {
-          orderNumber: ownedOrder.orderNumber,
+          orderNumber: order.orderNumber,
           status: ORDER_STATUS.CANCELLED,
           cancelledAt,
           outcome: "CANCELLED" as const,
@@ -382,5 +389,18 @@ export function createOrderCancelService({
     }
   }
 
-  return { cancelOrder };
+  async function cancelOrder(
+    input: CancelOrderInput,
+  ): Promise<OrderCancelResult> {
+    const userId = await requireCurrentUserId();
+    return cancelByOrderNumber(input, userId);
+  }
+
+  async function cancelOrderAsAdmin(
+    input: CancelOrderInput,
+  ): Promise<OrderCancelResult> {
+    return cancelByOrderNumber(input, null);
+  }
+
+  return { cancelOrder, cancelOrderAsAdmin };
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { logoutAction } from "@/app/actions/auth";
@@ -6,6 +7,8 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { SkipLink } from "@/components/SkipLink";
 import { requireUser } from "@/lib/auth-session";
+import { createProfileService } from "@/lib/profile-service";
+import { prisma } from "@/lib/prisma";
 
 export const instant = false;
 
@@ -17,8 +20,12 @@ export const metadata: Metadata = {
   },
 };
 
+const profileService = createProfileService({ prisma });
+
 export default async function AccountPage() {
   const user = await requireUser("/account");
+  const profile = await profileService.getProfile(user.id);
+  const displayName = profile.name ?? "Mini Mal1 会员";
 
   if (!user) {
     redirect("/login?returnTo=%2Faccount");
@@ -38,7 +45,7 @@ export default async function AccountPage() {
               Your account
             </p>
             <h1 className="mt-5 font-serif text-5xl leading-[1] tracking-[-0.05em] text-balance sm:text-7xl">
-              你好，{user.name ?? "Mini Mal1 会员"}。
+              你好，{displayName}。
             </h1>
             <p className="mt-6 max-w-[520px] text-sm leading-7 text-muted">
               当前身份由服务端 Session 验证。这里不会根据浏览器提交的角色字段判断权限。
@@ -62,12 +69,32 @@ export default async function AccountPage() {
             </dl>
 
             <form action={logoutAction} className="mt-7">
-              <button
-                type="submit"
-                className="min-h-11 border border-ink px-5 text-[10px] font-medium tracking-[0.14em] text-ink uppercase transition-colors hover:bg-ink hover:text-white"
-              >
-                退出登录
-              </button>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/account/orders"
+                  className="inline-flex min-h-11 items-center border border-ink px-5 text-[10px] font-medium tracking-[0.12em] text-ink uppercase transition-colors hover:bg-ink hover:text-white"
+                >
+                  我的订单
+                </Link>
+                <Link
+                  href="/account/addresses"
+                  className="inline-flex min-h-11 items-center border border-rule px-5 text-[10px] font-medium tracking-[0.12em] text-ink uppercase transition-colors hover:border-ink"
+                >
+                  收货地址
+                </Link>
+                <Link
+                  href="/account/profile"
+                  className="inline-flex min-h-11 items-center border border-rule px-5 text-[10px] font-medium tracking-[0.12em] text-ink uppercase transition-colors hover:border-ink"
+                >
+                  编辑资料
+                </Link>
+                <button
+                  type="submit"
+                  className="min-h-11 px-5 text-[10px] font-medium tracking-[0.14em] text-muted uppercase transition-colors hover:text-earth"
+                >
+                  退出登录
+                </button>
+              </div>
             </form>
           </div>
         </div>

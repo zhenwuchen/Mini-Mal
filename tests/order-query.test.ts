@@ -643,7 +643,7 @@ test("returns the same not-found error for missing and foreign orders", async ()
   );
 });
 
-test("returns unknown stored statuses without exposing payment data", async () => {
+test("returns unknown statuses and only safe payment snapshot fields", async () => {
   const user = await createUser("unknown-status");
   const order = await createOrder({
     userId: user.id,
@@ -672,8 +672,13 @@ test("returns unknown stored statuses without exposing payment data", async () =
 
   assert.equal(detail.status, "FUTURE_STATUS");
   assert.equal(getOrderStatusPresentation(detail.status).label, "状态未知");
+  assert.equal(detail.payments.length, 1);
+  assert.equal(detail.payments[0].status, "SUCCEEDED");
+  assert.equal(detail.payments[0].failureReason, null);
   assert.equal(returnedKeys.includes("payment"), false);
-  assert.equal(returnedKeys.includes("payments"), false);
+  assert.equal(returnedKeys.includes("payments"), true);
+  assert.equal(returnedKeys.includes("providerPaymentId"), false);
+  assert.equal(returnedKeys.includes("idempotencyKey"), false);
   assert.equal(returnedKeys.includes("provider"), false);
   assert.equal(returnedKeys.includes("userId"), false);
 });

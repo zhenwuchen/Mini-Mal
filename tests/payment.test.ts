@@ -827,7 +827,7 @@ test("completes a mock payment and atomically pays the order", async () => {
     idempotencyKey: nextFixtureName("complete-success-key"),
   });
 
-  const paidBefore = Date.now();
+  const paidNotBefore = await readDatabaseNowMs();
   const result = await service.completeMockPayment({
     orderNumber: order.orderNumber,
     paymentId: started.payment.id,
@@ -838,6 +838,7 @@ test("completes a mock payment and atomically pays the order", async () => {
   } as Parameters<
     ReturnType<typeof serviceFor>["completeMockPayment"]
   >[0]);
+  const paidNotAfter = await readDatabaseNowMs();
   const savedOrder = await prisma.order.findUnique({
     where: { id: order.id },
   });
@@ -849,8 +850,12 @@ test("completes a mock payment and atomically pays the order", async () => {
   assert.equal(result.payment.status, "SUCCEEDED");
   assert.equal(savedOrder?.status, "PAID");
   assert.ok(savedOrder?.paidAt);
-  assert.ok(savedOrder.paidAt.getTime() >= paidBefore);
-  assert.ok(savedOrder.paidAt.getTime() <= Date.now());
+  assert.ok(
+    savedOrder.paidAt.getTime() >= Number(paidNotBefore),
+  );
+  assert.ok(
+    savedOrder.paidAt.getTime() <= Number(paidNotAfter),
+  );
   assert.equal(savedPayment?.status, "SUCCEEDED");
   assert.equal(
     savedPayment?.paidAt?.getTime(),

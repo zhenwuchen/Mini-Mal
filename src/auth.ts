@@ -10,7 +10,8 @@ import {
   verifyCredentials,
 } from "@/lib/auth-service";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const { handlers, signIn, signOut, auth, unstable_update } =
+  NextAuth({
   secret: process.env.AUTH_SECRET,
   trustHost: process.env.AUTH_TRUST_HOST === "true",
   session: {
@@ -53,10 +54,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.role = normalizeUserRole(user.role);
+      }
+
+      if (trigger === "update" && session?.user) {
+        token.name = session.user.name ?? null;
       }
 
       return token;

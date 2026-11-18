@@ -1,7 +1,13 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { type FormEvent, useState, useTransition } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type FormEvent,
+} from "react";
 
 import { CloseIcon, SearchIcon } from "@/components/Icons";
 import {
@@ -15,6 +21,7 @@ type CatalogFiltersProps = {
   search: string;
   category: string;
   sort: ProductSort;
+  focusOnMount?: boolean;
 };
 
 export function CatalogFilters({
@@ -22,9 +29,11 @@ export function CatalogFilters({
   search,
   category,
   sort,
+  focusOnMount = false,
 }: CatalogFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState(search);
   const [isPending, startTransition] = useTransition();
   const hasFilters = Boolean(search || category);
@@ -33,6 +42,7 @@ export function CatalogFilters({
     search?: string;
     category?: string;
     sort?: ProductSort;
+    page?: number;
   }) {
     const params = updateCatalogSearchParams(
       new URLSearchParams(window.location.search),
@@ -46,6 +56,12 @@ export function CatalogFilters({
       });
     });
   }
+
+  useEffect(() => {
+    if (focusOnMount) {
+      searchInputRef.current?.focus({ preventScroll: true });
+    }
+  }, [focusOnMount]);
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -96,6 +112,7 @@ export function CatalogFilters({
           <div className="flex items-center border-b border-ink/30 pb-2 transition-colors focus-within:border-earth">
             <SearchIcon className="mr-3 size-4 shrink-0 text-muted" />
             <input
+              ref={searchInputRef}
               id="catalog-search"
               name="search"
               type="search"

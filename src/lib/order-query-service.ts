@@ -6,6 +6,8 @@ import {
   normalizeOrderNumber,
   normalizeOrderPagination,
   normalizeOrderStatusFilter,
+  toOrderPaymentView,
+  type OrderPaymentView,
 } from "@/lib/order-query-core";
 import type { OrderStatus } from "@/lib/order-status";
 
@@ -84,8 +86,12 @@ export type OrderDetail = Omit<
   OrderListItem,
   "totalQuantity" | "itemCount" | "items"
 > & {
+  expiresAt: Date | null;
+  paidAt: Date | null;
+  cancelledAt: Date | null;
   items: OrderSnapshotItem[];
   shipping: OrderShippingSnapshot;
+  payments: OrderPaymentView[];
 };
 
 export type OrderQueryService = {
@@ -136,6 +142,9 @@ const orderDetailSelect = {
   discountAmount: true,
   totalAmount: true,
   createdAt: true,
+  expiresAt: true,
+  paidAt: true,
+  cancelledAt: true,
   shippingName: true,
   shippingPhone: true,
   shippingAddress: true,
@@ -150,6 +159,22 @@ const orderDetailSelect = {
     orderBy: [
       { createdAt: "asc" },
       { id: "asc" },
+    ],
+  },
+  payments: {
+    select: {
+      id: true,
+      status: true,
+      amount: true,
+      currency: true,
+      failureCode: true,
+      failureReason: true,
+      createdAt: true,
+      paidAt: true,
+    },
+    orderBy: [
+      { createdAt: "desc" },
+      { id: "desc" },
     ],
   },
 } satisfies Prisma.OrderSelect;
@@ -298,7 +323,11 @@ export function createOrderQueryService({
         discountAmount: order.discountAmount,
         totalAmount: order.totalAmount,
         createdAt: order.createdAt,
+        expiresAt: order.expiresAt,
+        paidAt: order.paidAt,
+        cancelledAt: order.cancelledAt,
         items: order.items.map(toOrderSnapshotItem),
+        payments: order.payments.map(toOrderPaymentView),
         shipping: {
           recipientName:
             cleanText(order.shippingRecipientName) ||

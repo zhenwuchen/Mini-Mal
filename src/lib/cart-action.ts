@@ -101,12 +101,14 @@ function parseCartInput(formData: FormData): ParsedCartInput {
   };
 }
 
-export function buildProductLoginHref(slug: string): string {
-  const returnTo = sanitizeAuthRedirect(
-    `/products/${encodeURIComponent(slug)}`,
-  );
+export function buildLoginHref(returnTo: string): string {
+  const safeReturnTo = sanitizeAuthRedirect(returnTo);
 
-  return `/login?returnTo=${encodeURIComponent(returnTo)}`;
+  return `/login?returnTo=${encodeURIComponent(safeReturnTo)}`;
+}
+
+export function buildProductLoginHref(slug: string): string {
+  return buildLoginHref(`/products/${encodeURIComponent(slug)}`);
 }
 
 export async function executeAddToCart(

@@ -198,14 +198,14 @@
                 <span class="feature-check" aria-hidden="true"></span>
                 <div>
                   <h4>用户注册与登录</h4>
-                  <p>Credentials 登录、密码哈希、会话访问与用户隔离。</p>
+                  <p>Credentials 登录、密码哈希、会话访问、用户隔离与个人资料编辑。</p>
                 </div>
               </li>
               <li>
                 <span class="feature-check" aria-hidden="true"></span>
                 <div>
                   <h4>商品分类、列表与详情</h4>
-                  <p>分类筛选、商品展示和详情数据读取。</p>
+                  <p>搜索、分类、价格排序、服务端分页与商品卡片快捷加购。</p>
                 </div>
               </li>
               <li>
@@ -255,8 +255,8 @@
             <div class="stage-heading">
               <span>03</span>
               <div>
-                <h3>退出与回收</h3>
-                <p>让订单、支付和库存最终回到合法状态。</p>
+                <h3>运营与回收</h3>
+                <p>让订单、支付、库存和运营管理进入可控边界。</p>
               </div>
             </div>
             <ul class="feature-list">
@@ -279,6 +279,13 @@
                 <div>
                   <h4>内部任务接口鉴权</h4>
                   <p>独立 Bearer Token、SHA-256 摘要比较与配置错误隔离。</p>
+                </div>
+              </li>
+              <li>
+                <span class="feature-check" aria-hidden="true"></span>
+                <div>
+                  <h4>管理员后台</h4>
+                  <p>真实商品、分类和订单管理，每个 Action 再次验证 ADMIN 角色。</p>
                 </div>
               </li>
             </ul>
@@ -572,7 +579,7 @@
             <a href="assets/screenshots/home.png" target="_blank" rel="noopener">
               <img
                 src="assets/screenshots/home.png"
-                alt="Mini Mall 首页桌面端真实截图，展示品牌首屏、分类与热门商品"
+                alt="Mini Mal1 首页桌面端真实截图，展示品牌首屏、分类与热门商品"
                 width="1440"
                 height="1000"
               />
@@ -587,15 +594,15 @@
             <a href="assets/screenshots/products.png" target="_blank" rel="noopener">
               <img
                 src="assets/screenshots/products.png"
-                alt="商品列表页真实截图，展示分类筛选与商品网格"
-                width="1265"
-                height="3456"
+                alt="Mini Mal1 当前商品列表截图，展示分页、筛选和商品卡片快捷加购"
+                width="1440"
+                height="2400"
                 loading="lazy"
               />
             </a>
             <figcaption>
               <span>商品列表</span>
-              <p>分类与商品数据的真实读取结果。</p>
+              <p>20 件商品按每页 12 件分页，并展示快捷加购入口。</p>
             </figcaption>
           </figure>
 
@@ -603,9 +610,9 @@
             <a href="assets/screenshots/product-detail.png" target="_blank" rel="noopener">
               <img
                 src="assets/screenshots/product-detail.png"
-                alt="商品详情页真实截图，展示商品信息、库存和加入购物车区域"
+                alt="Mini Mal1 商品详情页真实截图，展示商品信息、库存和加入购物车区域"
                 width="1440"
-                height="3083"
+                height="1200"
                 loading="lazy"
               />
             </a>
@@ -619,9 +626,9 @@
             <a href="assets/screenshots/cart.png" target="_blank" rel="noopener">
               <img
                 src="assets/screenshots/cart.png"
-                alt="购物车页面真实截图，展示商品数量控制和订单摘要"
+                alt="Mini Mal1 购物车页面真实截图，展示商品数量控制和订单摘要"
                 width="1440"
-                height="1779"
+                height="1200"
                 loading="lazy"
               />
             </a>
@@ -632,12 +639,28 @@
           </figure>
 
           <figure class="screenshot">
+            <a href="assets/screenshots/checkout.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/checkout.png"
+                alt="Mini Mal1 结算页面真实截图，展示地址快照与订单确认"
+                width="1440"
+                height="1200"
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              <span>结算确认</span>
+              <p>地址、商品与服务端金额确认。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot">
             <a href="assets/screenshots/orders.png" target="_blank" rel="noopener">
               <img
                 src="assets/screenshots/orders.png"
-                alt="订单列表页面真实截图，展示测试订单及状态"
+                alt="Mini Mal1 订单列表页面真实截图，展示虚构测试订单及状态"
                 width="1440"
-                height="2522"
+                height="1200"
                 loading="lazy"
               />
             </a>
@@ -651,9 +674,9 @@
             <a href="assets/screenshots/order-detail.png" target="_blank" rel="noopener">
               <img
                 src="assets/screenshots/order-detail.png"
-                alt="订单详情页面真实截图，展示商品快照、金额与收货信息"
+                alt="Mini Mal1 订单详情页面真实截图，展示商品快照、金额与收货信息"
                 width="1440"
-                height="1830"
+                height="1200"
                 loading="lazy"
               />
             </a>
@@ -663,13 +686,77 @@
             </figcaption>
           </figure>
 
-          <figure class="screenshot screenshot-mobile">
+          <figure class="screenshot">
+            <a href="assets/screenshots/profile.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/profile.png"
+                alt="Mini Mal1 个人资料编辑页面真实截图"
+                width="1440"
+                height="1200"
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              <span>个人资料</span>
+              <p>只开放展示名称，邮箱与角色保持只读。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot">
+            <a href="assets/screenshots/admin-dashboard.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/admin-dashboard.png"
+                alt="Mini Mal1 后台运营概览真实截图"
+                width="1440"
+                height="1100"
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              <span>后台概览</span>
+              <p>来自数据库的商品、分类和订单统计。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot">
+            <a href="assets/screenshots/admin-products.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/admin-products.png"
+                alt="Mini Mal1 后台商品管理真实截图"
+                width="1440"
+                height="1100"
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              <span>后台商品管理</span>
+              <p>搜索、筛选、分页、上下架、编辑与归档。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot">
+            <a href="assets/screenshots/admin-orders.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/admin-orders.png"
+                alt="Mini Mal1 后台订单管理真实截图"
+                width="1440"
+                height="1100"
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              <span>后台订单管理</span>
+              <p>按订单与支付状态查询真实订单。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot">
             <a href="assets/screenshots/login.png" target="_blank" rel="noopener">
               <img
                 src="assets/screenshots/login.png"
-                alt="登录页面真实截图，展示账号密码表单"
+                alt="Mini Mal1 登录页面真实截图，展示账号密码表单"
                 width="1440"
-                height="1333"
+                height="1000"
                 loading="lazy"
               />
             </a>
@@ -683,15 +770,15 @@
             <a href="assets/screenshots/cart-mobile.png" target="_blank" rel="noopener">
               <img
                 src="assets/screenshots/cart-mobile.png"
-                alt="购物车移动端真实截图，展示窄屏下的商品与数量控制"
-                width="375"
-                height="2129"
+                alt="Mini Mal1 购物车移动端真实截图，展示窄屏下的商品与数量控制"
+                width="390"
+                height="1200"
                 loading="lazy"
               />
             </a>
             <figcaption>
               <span>移动端购物车</span>
-              <p>375px 宽度下的真实布局。</p>
+              <p>390px 宽度下的真实布局。</p>
             </figcaption>
           </figure>
 
@@ -699,15 +786,31 @@
             <a href="assets/screenshots/home-mobile.png" target="_blank" rel="noopener">
               <img
                 src="assets/screenshots/home-mobile.png"
-                alt="项目首页移动端真实截图，展示窄屏下的品牌首屏与商品内容"
-                width="375"
-                height="4967"
+                alt="Mini Mal1 首页移动端真实截图，展示窄屏下的品牌首屏与商品内容"
+                width="390"
+                height="844"
                 loading="lazy"
               />
             </a>
             <figcaption>
               <span>移动端首页</span>
-              <p>375px 宽度下的完整页面。</p>
+              <p>390px 宽度下的首页首屏。</p>
+            </figcaption>
+          </figure>
+
+          <figure class="screenshot screenshot-mobile">
+            <a href="assets/screenshots/products-mobile.png" target="_blank" rel="noopener">
+              <img
+                src="assets/screenshots/products-mobile.png"
+                alt="Mini Mal1 移动端商品列表真实截图，展示快捷加购与分页状态"
+                width="390"
+                height="1200"
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              <span>移动端商品列表</span>
+              <p>390px 宽度下的搜索、筛选、快捷加购和分页状态。</p>
             </figcaption>
           </figure>
         </div>
@@ -803,12 +906,12 @@
                 <span>05</span>
                 <div>
                   <h3>初始化全新数据库</h3>
-                  <p>使用仓库中已提交的 Migration。商城演示数据按需 seed。</p>
+                  <p>使用仓库中已提交的 Migration，Windows 本地与 Linux 生产均可安全重复执行。</p>
                 </div>
               </div>
               <div class="command">
-                <code>npm run db:migrate:deploy</code>
-                <button type="button" data-copy="npm run db:migrate:deploy">复制</button>
+                <code>npm run db:init</code>
+                <button type="button" data-copy="npm run db:init">复制</button>
               </div>
             </li>
             <li>

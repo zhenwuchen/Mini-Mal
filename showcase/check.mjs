@@ -49,6 +49,16 @@ function assertFile(filePath, label) {
   assert.ok(statSync(filePath).isFile(), `${label} is not a file: ${filePath}`);
 }
 
+function readPngDimensions(filePath) {
+  const bytes = readFileSync(filePath);
+
+  assert.equal(bytes.subarray(1, 4).toString("ascii"), "PNG");
+  return {
+    width: bytes.readUInt32BE(16),
+    height: bytes.readUInt32BE(20),
+  };
+}
+
 test("ships the required static entry files", () => {
   for (const fileName of [
     "index.html",
@@ -84,6 +94,10 @@ test("contains every required showcase section and project identity", () => {
     "SQLite",
     "App Router",
     "Bearer Token",
+    "管理员后台",
+    "个人资料",
+    "服务端分页",
+    "快捷加购",
   ]) {
     assert.ok(html.includes(requiredText), `missing text: ${requiredText}`);
   }
@@ -94,6 +108,7 @@ test("contains every required showcase section and project identity", () => {
     /<link\s+rel=["']icon["'][^>]*href=["'][^"']+["']/i,
     "missing local favicon declaration",
   );
+  assert.equal(html.includes("Mini Mall"), false);
 });
 
 test("links every local asset and anchor to an existing target", () => {
@@ -191,6 +206,43 @@ test("uses accessible images and includes explicit demo placeholders", () => {
 
   assert.ok(html.includes("演示视频待录制"));
   assert.match(html, /真实页面截图/);
+
+  const requiredScreenshots = [
+    "products.png",
+    "products-mobile.png",
+    "product-detail.png",
+    "cart.png",
+    "checkout.png",
+    "order-detail.png",
+    "profile.png",
+    "admin-dashboard.png",
+    "admin-products.png",
+    "admin-orders.png",
+  ];
+
+  for (const fileName of requiredScreenshots) {
+    const relativePath = `assets/screenshots/${fileName}`;
+    const filePath = join(showcaseRoot, relativePath);
+    assertFile(filePath, `required screenshot ${fileName}`);
+    assert.ok(
+      html.includes(`src="${relativePath}"`),
+      `missing screenshot reference: ${relativePath}`,
+    );
+  }
+
+  for (const image of images) {
+    const source = getAttribute(image, "src");
+    const alt = getAttribute(image, "alt");
+    const declaredWidth = Number(getAttribute(image, "width"));
+    const declaredHeight = Number(getAttribute(image, "height"));
+
+    if (!source?.startsWith("assets/screenshots/")) continue;
+
+    assert.match(alt ?? "", /Mini Mal1/);
+    const actual = readPngDimensions(join(showcaseRoot, source));
+    assert.equal(declaredWidth, actual.width, `wrong width: ${source}`);
+    assert.equal(declaredHeight, actual.height, `wrong height: ${source}`);
+  }
 });
 
 test("contains no prohibited infrastructure claims", () => {

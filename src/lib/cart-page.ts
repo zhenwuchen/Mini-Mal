@@ -1,3 +1,5 @@
+import { normalizeLocalImagePath } from "@/lib/image-path";
+
 export const cartFallbackImage = "/images/categories/home-living.jpg";
 export const cartLoginHref = "/login?returnTo=%2Fcart";
 
@@ -10,7 +12,7 @@ export function getCartItemImage(
   imageUrl: string | null | undefined,
 ): string {
   const normalized = imageUrl?.trim();
-  return normalized || cartFallbackImage;
+  return normalizeLocalImagePath(normalized, cartFallbackImage);
 }
 
 export function getCartItemAvailability({

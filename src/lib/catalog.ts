@@ -13,6 +13,8 @@ export type ProductCardData = {
   price: number;
   image: string;
   category: string;
+  stock: number;
+  isActive: boolean;
   tag?: ProductTag;
 };
 
